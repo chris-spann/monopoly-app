@@ -3,6 +3,7 @@ from fastapi_sqlalchemy import db
 from models.deed import Deed
 from models.gamespace import GameSpace
 from schemas.deed import PropertyDeed as PropertyDeedSchema
+from schemas.gamespace import GameSpace as GameSpaceShema
 
 router = APIRouter()
 
@@ -20,22 +21,12 @@ def get_gamespaces():
     return db.session.query(GameSpace).all()
 
 
-@router.get("/gamespace/{gampesace_id}")
+@router.get("/gamespace/{gampesace_id}", response_model=GameSpaceShema)
 def get_gamespace(gamespace_id):
     db_entry = get_space(gamespace_id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Gamespace not found")
     return db_entry
-
-
-@router.get("/gamespace/{gamespace_id}/details")
-def get_details(gamespace_id):
-    space = get_space(gamespace_id)
-    deed = get_deed(gamespace_id)
-    if space and deed:
-        space.deed = deed
-        return space
-    raise HTTPException(status_code=404, detail="Missing gamespace or deed")
 
 
 @router.patch("/gamespace/{gamespace_id}")

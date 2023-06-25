@@ -1,6 +1,7 @@
 from models.base import Base
+from models.deed import Deed
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 
 class GameSpace(Base):
@@ -15,3 +16,4 @@ class GameSpace(Base):
     owner_id = Column(Integer, ForeignKey("players.id"))
 
     owner = relationship("Player", back_populates="properties")
+    deed: Mapped["Deed"] = relationship()
