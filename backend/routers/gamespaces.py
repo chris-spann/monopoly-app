@@ -3,7 +3,8 @@ from fastapi_sqlalchemy import db
 from models.deed import Deed
 from models.gamespace import GameSpace
 from schemas.deed import PropertyDeed as PropertyDeedSchema
-from schemas.gamespace import GameSpace as GameSpaceShema
+from schemas.gamespace import GameSpace as GameSpaceSchema
+from schemas.gamespace import GameSpaceUpdate
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ def get_gamespaces():
     return db.session.query(GameSpace).all()
 
 
-@router.get("/gamespace/{gampesace_id}", response_model=GameSpaceShema)
+@router.get("/gamespace/{gampesace_id}", response_model=GameSpaceSchema)
 def get_gamespace(gamespace_id):
     db_entry = get_space(gamespace_id)
     if db_entry is None:
@@ -30,11 +31,11 @@ def get_gamespace(gamespace_id):
 
 
 @router.patch("/gamespace/{gamespace_id}")
-def update_gamespace(gamespace_id, gamespace):
+def update_gamespace(gamespace_id, gamespace: GameSpaceUpdate):
     db_entry = get_space(gamespace_id)
     if not db_entry:
         raise HTTPException(status_code=404, detail="Gamespace not found")
-    update_data = gamespace.dict(exclued_unset=True)
+    update_data = gamespace.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_entry, key, value)
     db.session.commit()

@@ -1,9 +1,14 @@
-from pydantic import BaseModel
+from random import randint
+
+from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
+from schemas.constants import RollResultCodes
 from schemas.gamespace import GameSpace
 
 
 class PlayerBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     position: int = 0
     cash: int = 1500
@@ -17,9 +22,26 @@ class PlayerBase(BaseModel):
 
 class Player(PlayerBase):
     id: int | None
+    prev_double: list[bool] = [False, False, False]
 
-    class Config:
-        orm_mode = True
+    def roll_die(self) -> tuple[int, int]:
+        return randint(1, 6), randint(1, 6)
+
+    def roll(self) -> int:
+        roll_1, roll_2 = self.roll_die()
+        self.prev_double.pop(0)
+        if roll_1 == roll_2:
+            self.prev_double.append(True)
+            if self.in_jail:
+                return RollResultCodes.JAIL_DOUBLE.value
+            if all(self.prev_double):
+                return RollResultCodes.THIRD_DOUBLE.value
+        else:
+            self.prev_double.append(False)
+            if self.in_jail and self.jail_count > 0:
+                self.jail_count -= 1
+                return 0
+        return roll_1 + roll_2
 
 
 class PlayerCreate(PlayerBase):
@@ -27,7 +49,6 @@ class PlayerCreate(PlayerBase):
 
 
 class PlayerUpdate(Player):
-    name: str | None
     position: int | None
     cash: int | None
     in_jail: bool | None

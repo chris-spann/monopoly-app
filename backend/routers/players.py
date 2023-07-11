@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
 from models.player import Player
+from schemas.player import PlayerCreate
 
 router = APIRouter()
 
@@ -14,7 +15,8 @@ def get_player_by_name(name: str):
 
 
 def create_game_player(player):
-    db_item = Player(**player.dict())
+    p = PlayerCreate(name=player)
+    db_item = Player(**p.model_dump())
     db.session.add(db_item)
     db.session.commit()
     db.session.refresh(db_item)
@@ -48,8 +50,8 @@ def update_player(player_id, player):
 
 
 @router.post("/players/")
-def create_player(player):
-    db_entry = get_player_by_name(player.name)
+def create_player(name: str):
+    db_entry = get_player_by_name(name)
     if db_entry:
         raise HTTPException(status_code=400, detail="Player already saved")
-    return create_game_player(player)
+    return create_game_player(name)

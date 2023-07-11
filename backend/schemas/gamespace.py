@@ -1,33 +1,29 @@
-from pydantic import BaseModel
+from typing import Any
 
-# from app.schemas.player import Player
+from pydantic import BaseModel, ConfigDict
 from schemas.deed import PropertyDeed
 
 
 class GameSpaceBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     value: int
     type: str
     group: str | None
     status: str
 
-    # owner: Player | None = None
 
-
-class GameSpaceCreate(GameSpaceBase):
-    name: str
-    value: int
-    type: str
-    group: str | None
-    status: str = "vacant"
-    owner_id: int | None = None
+class GameSpaceUpdate(GameSpaceBase):
+    status: str
+    owner_id: int | None
 
 
 class GameSpace(GameSpaceBase):
     id: int | None
     owner_id: int | None
-    deed: PropertyDeed | None  # type: ignore
-    # owner: Player | None = None
+    deed: PropertyDeed | None
 
-    class Config:
-        orm_mode = True
+
+class GameSpaceGame(GameSpaceBase):
+    owner: Any = None

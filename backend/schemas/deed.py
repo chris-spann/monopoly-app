@@ -1,17 +1,16 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseDeed(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     deed_type: str
     rent: int
-
-    class Config:
-        orm_mode = True
 
 
 class PropertyDeed(BaseDeed):
     id: int
-    deed_type = "property"
+    deed_type: str = "property"
     rent_group: int
     rent_1_house: int
     rent_2_houses: int
@@ -23,8 +22,8 @@ class PropertyDeed(BaseDeed):
 
 
 class RailRoadDeed(BaseDeed):
-    deed_type = "railroad"
-    rent = 25
+    deed_type: str = "railroad"
+    rent: int = 25
     rent_2: int = 50
     rent_3: int = 100
     rent_4: int = 200
