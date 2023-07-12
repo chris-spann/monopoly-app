@@ -1,12 +1,12 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
-class CardTypes(Enum):
+class CardTypes(str, Enum):
     COMMUNITY_CHEST = "community_chest"
     CHANCE = "chance"
 
 
-class GameSpaceTypes(Enum):
+class GameSpaceTypes(str, Enum):
     DRAW_CHEST = "draw-chest"
     DRAW_CHANCE = "draw-chance"
     FREE = "free"
@@ -18,7 +18,7 @@ class GameSpaceTypes(Enum):
     TAX_INCOME = "tax-income"
 
 
-class PropertyGroup(Enum):
+class PropertyGroup(str, Enum):
     BLUE = "blue"
     GREEN = "green"
     LIGHT_BLUE = "light-blue"
@@ -30,11 +30,11 @@ class PropertyGroup(Enum):
     YELLOW = "yellow"
 
 
-class PropertyStatus(Enum):
+class PropertyStatus(str, Enum):
     OWNED = "owned"
     VACANT = "vacant"
 
 
-class RollResultCodes(Enum):
+class RollResultCodes(IntEnum):
     THIRD_DOUBLE = 98
     JAIL_DOUBLE = 99
