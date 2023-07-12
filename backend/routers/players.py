@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
 from models.player import Player
-from schemas.player import PlayerCreate
+from schemas.player import Player as PlayerSchema
+from schemas.player import PlayerCreate, PlayerUpdate
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def create_game_player(player):
     return db_item
 
 
-@router.get("/player/{player_id}")
+@router.get("/player/{player_id}", response_model=PlayerSchema)
 def get_player(player_id: int):
     db_entry = get_game_player(player_id)
     if db_entry is None:
@@ -37,11 +38,11 @@ def get_players():
 
 
 @router.patch("/player/{player_id}")
-def update_player(player_id, player):
+def update_player(player_id, player: PlayerUpdate):
     db_entry = get_game_player(player_id)
     if not db_entry:
         raise HTTPException(status_code=404, detail="Player not found")
-    update_data = player.dict(exclued_unset=True)
+    update_data = player.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_entry, key, value)
     db.session.commit()
