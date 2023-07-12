@@ -1,0 +1,20 @@
+Game Setup
+    Player:
+        Input player name
+        POST to DB to create
+        Update player in DB after every turn
+    
+    Cards:
+        GET seeded cards
+        Shuffle and draw in-memory
+        No updates to DB
+    
+    GameSpaces:
+        Initial GET to setup game with seeded data
+        update in memory and PATCH when purchased or updated
+        GET deed details from DB when needed (not kept in-memory)
+
+    Game:
+        In-memory, no calls to DB
+        TODO: Add game reset (recreate tables(?) and run setup_game())
+        TODO: Add ability to save/recall game from DB
