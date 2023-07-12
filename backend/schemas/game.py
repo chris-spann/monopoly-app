@@ -2,12 +2,12 @@ import itertools
 import random
 
 import click
+import requests
 from pydantic import BaseModel, ConfigDict
-from routers.cards import get_cards as gc
 from schemas.card import Card
 from schemas.constants import CardTypes, GameSpaceTypes, PropertyStatus, RollResultCodes
 from schemas.gamespace import GameSpaceGame
-from schemas.player import Player
+from schemas.player import Player, PlayerCreate
 
 
 class Game(BaseModel):
@@ -20,22 +20,36 @@ class Game(BaseModel):
     jail_index: int = 0
     no_cash_players: int = 0
 
-    def get_cards(self):
-        return gc()
-
     def add_space(self, space: GameSpaceGame) -> None:
         self.spaces.append(space)
         if space.type == GameSpaceTypes.JAIL:
             self.jail_index = len(self.spaces) - 1
 
-    def add_player(self, player: Player) -> None:
-        self.players.append(player)
+    def get_gamespaces(self):
+        response = requests.get("http://localhost:8000/gamespaces/").json()
+        for space in response:
+            self.add_space(GameSpaceGame(**space))
 
-    def add_card(self, title, type) -> None:
-        if type == CardTypes.CHANCE:
-            self.chance_cards.append(Card(title=title, type=type))
+    def add_player(self, player: PlayerCreate) -> None:
+        try:
+            res = requests.post(f"http://localhost:8000/players/?name={player.name}")
+            self.players.append(Player(**res.json()))
+        except Exception as e:
+            click.echo("Error adding player:")
+            click.echo(e)
+
+    def add_players(self):
+        num_players = click.prompt("How many players?", type=int)
+        for i in range(num_players):
+            name = click.prompt("Enter player name", type=str)
+            self.add_player(PlayerCreate(name=name))
+        print(self.players)
+
+    def add_card(self, card: Card) -> None:
+        if card.type == CardTypes.CHANCE:
+            self.chance_cards.append(card)
         else:
-            self.cc_cards.append(Card(title=title, type=type))
+            self.cc_cards.append(card)
 
     def shuffle_cards(self):
         random.shuffle(self.cc_cards)
@@ -43,38 +57,42 @@ class Game(BaseModel):
         click.echo("cards shuffled")
         return self
 
-    def draw_card(self, type: str) -> Card:
-        return self.chance_cards[0] if type == CardTypes.CHANCE else self.cc_cards[0]
+    def get_cards(self):
+        response = requests.get("http://localhost:8000/cards/").json()
+        for card in response:
+            self.add_card(Card(**card))
+        self.shuffle_cards()
 
-    def send_player_to_just_visiting(self, player: Player) -> None:
-        player.in_jail = False
-        player.jail_count = 0
-        player.position = self.jail_index
+    def draw_card(self, card_type: CardTypes) -> Card:
+        return self.chance_cards[0] if card_type == CardTypes.CHANCE else self.cc_cards[0]
 
-    def send_player_to_jail(self, player: Player) -> None:
-        player.in_jail = True
-        player.jail_count = 3
-        player.position = self.jail_index
+    def jail_player(self, player: Player) -> None:
+        player.go_to_jail(self.jail_index)
+
+    def jail_visit_player(self, player: Player) -> None:
+        player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
 
     def post_move_action(self, new_space: GameSpaceGame, player: Player) -> None:
         if new_space.type == GameSpaceTypes.GO_TO_JAIL:
             click.echo("Going to jail...")
-            self.send_player_to_jail(player)
+            self.jail_player(player)
         # TODO: implement drawing of card
         if new_space.type in [GameSpaceTypes.DRAW_CHANCE, GameSpaceTypes.DRAW_CHEST]:
             click.echo("Draw a card")
-            card = self.draw_card(new_space.type)
+            if new_space.type == GameSpaceTypes.DRAW_CHANCE:
+                card = self.draw_card(CardTypes.CHANCE)
+            else:
+                card = self.draw_card(CardTypes.COMMUNITY_CHEST)
             if card.is_gooj:
                 # TODO: call update player endpoint
                 # player.add_gooj_card(card)
                 click.echo("Drew a get out of jail free card!")
                 return
-        # TODO: what if the player doesn't have enough cash?
+
         if new_space.type == GameSpaceTypes.TAX:
-            click.echo(f"Taxed! Paid: {new_space.value}")
-            player.cash -= new_space.value
-            player.cash = max(player.cash, 0)
-        # TODO: if new space type is TAX_INCOME, present the choice of 10% of cash or $200
+            player.pay_tax(new_space.value)
+        if new_space.type == GameSpaceTypes.TAX_INCOME:
+            player.pay_income_tax()
         # TODO: if property is owned, determine the rent amount and pay it
         if (
             new_space.type in [GameSpaceTypes.PROPERTY, GameSpaceTypes.RAILROAD]
@@ -88,13 +106,12 @@ class Game(BaseModel):
         ) and click.confirm(f"Property is vacant. Purchase for ${new_space.value}?"):
             if player.cash >= new_space.value:
                 new_space.owner = player
-                new_space.status = PropertyStatus.OWNED.value
+                new_space.status = PropertyStatus.OWNED
                 player.cash -= new_space.value
             else:
                 click.echo("Sorry, not enough cash.")
 
     def play(self) -> None:
-        click.echo(f"game spaces: {len(self.spaces)}")
         self.no_cash_players = 0
         list_buff = itertools.cycle(self.players)
         for player in list_buff:
@@ -114,13 +131,13 @@ class Game(BaseModel):
         click.echo(f"player: {player.name} started on {starting_space}")
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
-        if roll_result == RollResultCodes.THIRD_DOUBLE.value:
+        if roll_result == RollResultCodes.THIRD_DOUBLE:
             click.echo("3rd consecutive double, go to jail, fool!")
-            self.send_player_to_jail(player)
+            self.jail_player(player)
             return
-        if roll_result == RollResultCodes.JAIL_DOUBLE.value:
+        if roll_result == RollResultCodes.JAIL_DOUBLE:
             click.echo("Rolled a double while in jail, now just visiting.")
-            self.send_player_to_just_visiting(player)
+            self.jail_visit_player(player)
             return
         click.echo(f"rolled: {roll_result}")
         # if player passes or lands on GO, add 200 to their cash

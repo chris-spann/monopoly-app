@@ -1,5 +1,6 @@
 from random import randint
 
+import click
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
 from schemas.constants import RollResultCodes
@@ -42,6 +43,26 @@ class Player(PlayerBase):
                 self.jail_count -= 1
                 return 0
         return roll_1 + roll_2
+
+    def pay_tax(self, amount: int) -> None:
+        if amount >= self.cash:
+            self.cash = 0
+        else:
+            self.cash -= amount
+        click.echo(f"{self.name} paid ${amount} in taxes")
+
+    def pay_income_tax(self) -> None:
+        click.echo(f"You have ${self.cash}. You must pay either $200 or 10% of your total cash.")
+        click.echo("Enter 1 to pay $200 or 2 to pay 10%")
+        if click.prompt("Enter 1 or 2", type=int) == 1:
+            self.pay_tax(200)
+        else:
+            self.pay_tax(self.cash // 10)
+
+    def go_to_jail(self, jail_index: int, jail_count=3, in_jail=True):
+        self.in_jail = in_jail
+        self.jail_count = jail_count
+        self.position = jail_index
 
 
 class PlayerCreate(PlayerBase):
