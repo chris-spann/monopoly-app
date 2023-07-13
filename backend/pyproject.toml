@@ -32,7 +32,7 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.pytest.ini_options]
-addopts = "-ra -q -s -v --cov=. --cov-report term-missing"
+addopts = "-ra -q -v --cov=. --cov-report term-missing"
 
 [tool.coverage.run]
 omit = ["/tests/*"]

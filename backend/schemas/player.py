@@ -34,9 +34,9 @@ class Player(PlayerBase):
         if roll_1 == roll_2:
             self.prev_double.append(True)
             if self.in_jail:
-                return RollResultCode.JAIL_DOUBLE.value
+                return RollResultCode.JAIL_DOUBLE
             if all(self.prev_double):
-                return RollResultCode.THIRD_DOUBLE.value
+                return RollResultCode.THIRD_DOUBLE
         else:
             self.prev_double.append(False)
             if self.in_jail and self.jail_count > 0:
@@ -67,6 +67,7 @@ class Player(PlayerBase):
     def handle_draw_card(self, card: Card):
         if card.is_gooj:
             click.echo("Drew a get out of jail free card!")
+            return
             # TODO: call update player endpoint
             # player.add_gooj_card(card)
 
