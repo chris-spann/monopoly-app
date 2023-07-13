@@ -10,7 +10,7 @@ def get_deed(deed_id: int):
 
 
 @router.get("/deed/{deed_id}")
-def get_proeprty_deed(deed_id: int):
+def get_property_deed(deed_id: int):
     db_entry = get_deed(deed_id)
     if db_entry is None:
         raise HTTPException(status_code=404, detail="Deed not found")
