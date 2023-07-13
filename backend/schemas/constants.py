@@ -2,7 +2,7 @@ from enum import Enum, IntEnum
 
 
 class CardTypes(str, Enum):
-    COMMUNITY_CHEST = "community_chest"
+    COMMUNITY_CHEST = "community-chest"
     CHANCE = "chance"
 
 
@@ -33,6 +33,12 @@ class PropertyGroup(str, Enum):
 class PropertyStatus(str, Enum):
     OWNED = "owned"
     VACANT = "vacant"
+    OWNED_GROUP = "owned-group"
+    OWNED_1_HOUSE = "owned-1-house"
+    OWNED_2_HOUSES = "owned-2-houses"
+    OWNED_3_HOUSES = "owned-3-houses"
+    OWNED_4_HOUSES = "owned-4-houses"
+    OWNED_HOTEL = "owned-hotel"
 
 
 class RollResultCodes(IntEnum):
