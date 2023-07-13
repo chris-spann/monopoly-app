@@ -6,7 +6,7 @@ def setup_game() -> Game:
     game = Game()
     game.get_gamespaces()
     game.get_cards()
-    game.add_players()
+    game.setup_players()
     return game
 
 

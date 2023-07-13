@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum
 
+PASS_GO_AMOUNT = 200
+
 
 class CardType(str, Enum):
     COMMUNITY_CHEST = "community-chest"

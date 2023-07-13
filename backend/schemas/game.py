@@ -5,7 +5,15 @@ import click
 import requests
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
-from schemas.constants import CardType, GameSpaceType, PayType, PropertyStatus, RollResultCode
+from schemas.constants import (
+    CardType,
+    GameSpaceType,
+    PayType,
+    PropertyStatus,
+    RollResultCode,
+    PASS_GO_AMOUNT,
+)
+
 from schemas.gamespace import GameSpaceGame
 from schemas.player import Player, PlayerCreate
 
@@ -38,7 +46,7 @@ class Game(BaseModel):
             click.echo("Error adding player:")
             click.echo(e)
 
-    def add_players(self):
+    def setup_players(self):
         num_players = click.prompt("How many players?", type=int)
         for i in range(num_players):
             name = click.prompt("Enter player name", type=str)
@@ -79,6 +87,13 @@ class Game(BaseModel):
         ):
             payer.pay(rent, PayType.RENT)
             payee.cash += rent
+
+    def move_player(self, player: Player, roll_result: int) -> None:
+        # if player passes or lands on GO, add PASS_GO_AMOUNT to player's cash
+        if player.position + roll_result >= len(self.spaces):
+            player.cash += PASS_GO_AMOUNT
+            click.echo(f"passed go, added ${PASS_GO_AMOUNT}")
+        player.position = (player.position + roll_result) % len(self.spaces)
 
     def post_move_action(self, new_space: GameSpaceGame, player: Player) -> None:
         if new_space.type == GameSpaceType.GO_TO_JAIL:
@@ -146,11 +161,7 @@ class Game(BaseModel):
             self.jail_visit_player(player)
             return
         click.echo(f"rolled: {roll_result}")
-        # if player passes or lands on GO, add 200 to their cash
-        if player.position + roll_result >= len(self.spaces):
-            player.cash += 200
-            click.echo("passed go, added $200")
-        player.position = (player.position + roll_result) % len(self.spaces)
+        self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
         click.echo(f"player: {player.name} landed on {new_space}")
         self.post_move_action(new_space, player)
