@@ -1,12 +1,12 @@
 from enum import Enum, IntEnum
 
 
-class CardTypes(str, Enum):
+class CardType(str, Enum):
     COMMUNITY_CHEST = "community-chest"
     CHANCE = "chance"
 
 
-class GameSpaceTypes(str, Enum):
+class GameSpaceType(str, Enum):
     DRAW_CHEST = "draw-chest"
     DRAW_CHANCE = "draw-chance"
     FREE = "free"
@@ -16,6 +16,12 @@ class GameSpaceTypes(str, Enum):
     RAILROAD = "railroad"
     TAX = "tax"
     TAX_INCOME = "tax-income"
+
+
+class PayType(str, Enum):
+    INCOME_TAX = "income-tax"
+    TAX = "tax"
+    RENT = "rent"
 
 
 class PropertyGroup(str, Enum):
@@ -41,6 +47,6 @@ class PropertyStatus(str, Enum):
     OWNED_HOTEL = "owned-hotel"
 
 
-class RollResultCodes(IntEnum):
+class RollResultCode(IntEnum):
     THIRD_DOUBLE = 98
     JAIL_DOUBLE = 99

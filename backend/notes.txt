@@ -3,12 +3,12 @@ Game Setup
         Input player name
         POST to DB to create
         Update player in DB after every turn
-    
+
     Cards:
         GET seeded cards
         Shuffle and draw in-memory
         No updates to DB
-    
+
     GameSpaces:
         Initial GET to setup game with seeded data
         update in memory and PATCH when purchased or updated

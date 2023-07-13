@@ -5,7 +5,7 @@ import click
 import requests
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
-from schemas.constants import CardTypes, GameSpaceTypes, PropertyStatus, RollResultCodes
+from schemas.constants import CardType, GameSpaceType, PayType, PropertyStatus, RollResultCode
 from schemas.gamespace import GameSpaceGame
 from schemas.player import Player, PlayerCreate
 
@@ -22,7 +22,7 @@ class Game(BaseModel):
 
     def add_space(self, space: GameSpaceGame) -> None:
         self.spaces.append(space)
-        if space.type == GameSpaceTypes.JAIL:
+        if space.type == GameSpaceType.JAIL:
             self.jail_index = len(self.spaces) - 1
 
     def get_gamespaces(self):
@@ -46,7 +46,7 @@ class Game(BaseModel):
         print(self.players)
 
     def add_card(self, card: Card) -> None:
-        if card.type == CardTypes.CHANCE:
+        if card.type == CardType.CHANCE:
             self.chance_cards.append(card)
         else:
             self.cc_cards.append(card)
@@ -63,8 +63,8 @@ class Game(BaseModel):
             self.add_card(Card(**card))
         self.shuffle_cards()
 
-    def draw_card(self, card_type: CardTypes) -> Card:
-        return self.chance_cards[0] if card_type == CardTypes.CHANCE else self.cc_cards[0]
+    def draw_card(self, card_type: CardType) -> Card:
+        return self.chance_cards[0] if card_type == CardType.CHANCE else self.cc_cards[0]
 
     def jail_player(self, player: Player) -> None:
         player.go_to_jail(self.jail_index)
@@ -72,36 +72,42 @@ class Game(BaseModel):
     def jail_visit_player(self, player: Player) -> None:
         player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
 
+    def handle_rent_payment(self, payer: Player, payee: Player, rent: int):
+        if click.confirm(
+            f"{payee.name}, Want to charge {payer.name} ${rent} rent?",
+            abort=True,
+        ):
+            payer.pay(rent, PayType.RENT)
+            payee.cash += rent
+
     def post_move_action(self, new_space: GameSpaceGame, player: Player) -> None:
-        if new_space.type == GameSpaceTypes.GO_TO_JAIL:
+        if new_space.type == GameSpaceType.GO_TO_JAIL:
             click.echo("Going to jail...")
             self.jail_player(player)
         # TODO: implement drawing of card
-        if new_space.type in [GameSpaceTypes.DRAW_CHANCE, GameSpaceTypes.DRAW_CHEST]:
-            click.echo("Draw a card")
-            if new_space.type == GameSpaceTypes.DRAW_CHANCE:
-                card = self.draw_card(CardTypes.CHANCE)
+        if new_space.type in [GameSpaceType.DRAW_CHANCE, GameSpaceType.DRAW_CHEST]:
+            if new_space.type == GameSpaceType.DRAW_CHANCE:
+                click.echo("Draw a chance card")
+                card = self.chance_cards.pop(0)
             else:
-                card = self.draw_card(CardTypes.COMMUNITY_CHEST)
-            if card.is_gooj:
-                # TODO: call update player endpoint
-                # player.add_gooj_card(card)
-                click.echo("Drew a get out of jail free card!")
-                return
-
-        if new_space.type == GameSpaceTypes.TAX:
-            player.pay_tax(new_space.value)
-        if new_space.type == GameSpaceTypes.TAX_INCOME:
+                card = self.cc_cards.pop(0)
+            if not card.is_gooj:
+                self.add_card(card)
+            player.handle_draw_card(card)
+        if new_space.type == GameSpaceType.TAX:
+            player.pay(new_space.value, PayType.TAX)
+        if new_space.type == GameSpaceType.TAX_INCOME:
             player.pay_income_tax()
         # TODO: if property is owned, determine the rent amount and pay it
         if (
-            new_space.type in [GameSpaceTypes.PROPERTY, GameSpaceTypes.RAILROAD]
+            new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.OWNED
             and new_space.owner != player
         ):
             click.echo(f"property is owned by {new_space.owner}. Please pay 1 million dollars.")
+            self.handle_rent_payment(player, new_space.owner, new_space.get_rent())
         if (
-            new_space.type in [GameSpaceTypes.PROPERTY, GameSpaceTypes.RAILROAD]
+            new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.VACANT
         ) and click.confirm(f"Property is vacant. Purchase for ${new_space.value}?"):
             if player.cash >= new_space.value:
@@ -131,11 +137,11 @@ class Game(BaseModel):
         click.echo(f"player: {player.name} started on {starting_space}")
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
-        if roll_result == RollResultCodes.THIRD_DOUBLE:
+        if roll_result == RollResultCode.THIRD_DOUBLE:
             click.echo("3rd consecutive double, go to jail, fool!")
             self.jail_player(player)
             return
-        if roll_result == RollResultCodes.JAIL_DOUBLE:
+        if roll_result == RollResultCode.JAIL_DOUBLE:
             click.echo("Rolled a double while in jail, now just visiting.")
             self.jail_visit_player(player)
             return
