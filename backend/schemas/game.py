@@ -6,14 +6,13 @@ import requests
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
 from schemas.constants import (
+    PASS_GO_AMOUNT,
     CardType,
     GameSpaceType,
     PayType,
     PropertyStatus,
     RollResultCode,
-    PASS_GO_AMOUNT,
 )
-
 from schemas.gamespace import GameSpaceGame
 from schemas.player import Player, PlayerCreate
 
@@ -119,8 +118,9 @@ class Game(BaseModel):
             and new_space.status == PropertyStatus.OWNED
             and new_space.owner != player
         ):
-            click.echo(f"property is owned by {new_space.owner}. Please pay 1 million dollars.")
-            self.handle_rent_payment(player, new_space.owner, new_space.get_rent())
+            rent = new_space.get_rent()
+            click.echo(f"property is owned by {new_space.owner}. ${rent}.")
+            self.handle_rent_payment(player, new_space.owner, rent)
         if (
             new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.VACANT
@@ -129,6 +129,12 @@ class Game(BaseModel):
                 new_space.owner = player
                 new_space.status = PropertyStatus.OWNED
                 player.cash -= new_space.value
+                click.echo(f"new space id: {new_space.id}")
+                requests.post(
+                    f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
+                )
+                click.echo(f"{player.name} purchased {new_space.name} for ${new_space.value}.")
+
             else:
                 click.echo("Sorry, not enough cash.")
 

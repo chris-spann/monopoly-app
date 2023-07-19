@@ -1,7 +1,8 @@
 from models.base import Base
 from models.deed import Deed
+from schemas.constants import GameSpaceType
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class GameSpace(Base):
@@ -10,9 +11,9 @@ class GameSpace(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), index=True)
     value = Column(Integer)
-    type = Column(String(50))
+    type: Mapped[GameSpaceType] = mapped_column(String(50))
     group = Column(String, nullable=True)
-    status = Column(String(50))
+    status = mapped_column(String(50))
     owner_id = Column(Integer, ForeignKey("players.id"))
 
     owner = relationship("Player", back_populates="properties")

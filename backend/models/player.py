@@ -1,6 +1,6 @@
 from models.base import Base
 from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import mapped_column, relationship
 
 
 class Player(Base):
@@ -8,7 +8,7 @@ class Player(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), index=True)
-    cash = Column(Integer)
+    cash = mapped_column(Integer)
     position = Column(Integer)
     in_jail = Column(Boolean)
     roll_1 = Column(Boolean, default=False)

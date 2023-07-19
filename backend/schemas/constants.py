@@ -18,6 +18,7 @@ class GameSpaceType(str, Enum):
     RAILROAD = "railroad"
     TAX = "tax"
     TAX_INCOME = "tax-income"
+    UTILITY = "utility"
 
 
 class PayType(str, Enum):
