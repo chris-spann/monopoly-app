@@ -1,6 +1,6 @@
 from unittest import mock
 
-from schemas.constants import PayType, RollResultCode
+from constants import PayType, RollResultCode
 
 
 class TestPlayer:

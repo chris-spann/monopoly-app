@@ -1,8 +1,8 @@
+from constants import GameSpaceType, PropertyStatus
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
 from models.player import Player
 from routers.gamespaces import get_space
-from schemas.constants import GameSpaceType, PropertyStatus
 from schemas.player import Player as PlayerSchema
 from schemas.player import PlayerCreate, PlayerUpdate
 

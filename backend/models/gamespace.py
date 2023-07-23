@@ -1,6 +1,6 @@
+from constants import GameSpaceType
 from models.base import Base
 from models.deed import Deed
-from schemas.constants import GameSpaceType
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

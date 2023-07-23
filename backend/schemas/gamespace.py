@@ -1,7 +1,7 @@
 from typing import Any
 
+from constants import GameSpaceType, PropertyGroup, PropertyStatus
 from pydantic import BaseModel, ConfigDict
-from schemas.constants import GameSpaceType, PropertyGroup, PropertyStatus
 from schemas.deed import PropertyDeed
 
 

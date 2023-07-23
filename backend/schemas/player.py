@@ -1,9 +1,9 @@
 from random import randint
 
 import click
+from constants import CardType, PayType, RollResultCode
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
-from schemas.constants import CardType, PayType, RollResultCode
 from schemas.gamespace import GameSpace
 
 

@@ -3,9 +3,7 @@ import random
 
 import click
 import requests
-from pydantic import BaseModel, ConfigDict
-from schemas.card import Card
-from schemas.constants import (
+from constants import (
     PASS_GO_AMOUNT,
     CardType,
     GameSpaceType,
@@ -13,6 +11,8 @@ from schemas.constants import (
     PropertyStatus,
     RollResultCode,
 )
+from pydantic import BaseModel, ConfigDict
+from schemas.card import Card
 from schemas.gamespace import GameSpaceGame
 from schemas.player import Player, PlayerCreate
 

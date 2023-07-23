@@ -1,5 +1,5 @@
 import requests
-from schemas.constants import PropertyStatus
+from constants import PropertyStatus
 
 
 def test_hello_world(test_client):

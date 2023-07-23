@@ -1,5 +1,5 @@
 import pytest
-from schemas.constants import PropertyStatus
+from constants import PropertyStatus
 
 
 class TestGameSpace:

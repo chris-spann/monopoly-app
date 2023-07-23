@@ -1,8 +1,8 @@
 import pytest
+from constants import CardType, GameSpaceType, PropertyStatus
 from fastapi.testclient import TestClient
 from main import app
 from schemas.card import Card
-from schemas.constants import CardType, GameSpaceType, PropertyStatus
 from schemas.deed import PropertyDeed
 from schemas.gamespace import GameSpace
 from schemas.player import Player
@@ -45,9 +45,9 @@ def mock_gamespace_no_deed():
         owner_id=None,
         name="test",
         value=200,
-        type=GameSpaceType.PROPERTY,
+        type=GameSpaceType.PROPERTY,  # type: ignore
         group=None,
-        status=PropertyStatus.VACANT,
+        status=PropertyStatus.VACANT,  # type: ignore
         deed=None,
     )
 
@@ -59,9 +59,9 @@ def mock_gamespace():
         owner_id=None,
         name="test",
         value=200,
-        type=GameSpaceType.PROPERTY,
+        type=GameSpaceType.PROPERTY,  # type: ignore
         group=None,
-        status=PropertyStatus.VACANT,
+        status=PropertyStatus.VACANT,  # type: ignore
         deed=PropertyDeed(
             id=1,
             rent_group=1,
