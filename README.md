@@ -1,4 +1,4 @@
-# Monopoly CLI App with FastAPI and PostgreSQL
+# Monopoly CLI App
 
 
 This is a Monopoly app that allows you to play the classic board game on your computer. It is built with FastAPI and managed with Poetry, and can be run in a Docker-Compose container with a Postgres database. Alembic is used for database migrations and Pydantic is used for data validation.
