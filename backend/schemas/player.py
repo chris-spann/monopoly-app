@@ -52,7 +52,9 @@ class Player(PlayerBase):
         click.echo(f"{self.name} paid ${amount} for {reason}")
 
     def pay_income_tax(self) -> None:
-        click.echo(f"You have ${self.cash}. You must pay either $200 or 10% of your total cash.")
+        click.echo(
+            f"You must pay either $200 or 10% of your total cash. (current cash: ${self.cash})"
+        )
         click.echo("Enter 1 to pay $200 or 2 to pay 10%")
         if click.prompt("Enter 1 or 2", type=int) == 1:
             self.pay(200, PayType.INCOME_TAX)
@@ -72,9 +74,11 @@ class Player(PlayerBase):
             # player.add_gooj_card(card)
 
         if card.type == CardType.CHANCE:
-            pass
-        else:
-            pass
+            click.echo("Drew a chance card!")
+            click.echo(card.title)
+        if card.type == CardType.COMMUNITY_CHEST:
+            click.echo("Drew a community chest card!")
+            click.echo(card.title)
 
 
 class PlayerCreate(PlayerBase):

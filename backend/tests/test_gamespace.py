@@ -17,7 +17,7 @@ class TestGameSpace:
             ("mock_gamespace", "", 0),
         ],
     )
-    def test_get_rent(self, gamespace, status, expected, request):
+    def test_get_property_rent(self, gamespace, status, expected, request):
         gamespace = request.getfixturevalue(gamespace)
         gamespace.status = status
-        assert gamespace.get_rent() == expected
+        assert gamespace.get_property_rent() == expected

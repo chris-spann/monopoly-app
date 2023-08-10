@@ -25,7 +25,7 @@ class GameSpace(GameSpaceBase):
     owner_id: int | None
     deed: PropertyDeed | None
 
-    def get_rent(self):
+    def get_property_rent(self):
         if self.deed is None:
             return 0
         match self.status:

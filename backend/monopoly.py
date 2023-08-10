@@ -2,7 +2,7 @@ from schemas.game import Game
 
 
 def setup_game() -> Game:
-    print("one moment...")
+    print("One moment...")
     game = Game()
     game.get_gamespaces()
     game.get_cards()

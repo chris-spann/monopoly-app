@@ -34,6 +34,14 @@ def get_player(player_id: int):
     return db_entry
 
 
+@router.get("/player/name/{name}", response_model=PlayerSchema)
+def get_player_name(name: str):
+    db_entry = get_player_by_name(name)
+    if db_entry is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return db_entry
+
+
 @router.get("/players/")
 def get_players():
     return db.session.query(Player).all()
@@ -58,7 +66,11 @@ def add_property(player_id, property_id):
     if not db_entry:
         raise HTTPException(status_code=404, detail="Player not found")
     space = get_space(property_id)
-    if space and space.type == GameSpaceType.PROPERTY:
+    if space and space.type in [
+        GameSpaceType.PROPERTY,
+        GameSpaceType.UTILITY,
+        GameSpaceType.RAILROAD,
+    ]:
         space.status = PropertyStatus.OWNED
         db_entry.properties.append(space)
         db_entry.cash -= space.value
@@ -73,4 +85,5 @@ def create_player(name: str):
     db_entry = get_player_by_name(name)
     if db_entry:
         raise HTTPException(status_code=400, detail="Player already saved")
-    return create_game_player(name)
+    create_game_player(name)
+    return get_player_by_name(name)

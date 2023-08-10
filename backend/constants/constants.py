@@ -35,6 +35,7 @@ class PropertyGroup(str, Enum):
     RAILROAD = "railroad"
     RED = "red"
     PURPLE = "purple"
+    UTILITY = "utility"
     VIOLET = "violet"
     YELLOW = "yellow"
 

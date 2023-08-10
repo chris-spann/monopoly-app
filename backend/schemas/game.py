@@ -1,5 +1,6 @@
 import itertools
 import random
+from time import sleep
 
 import click
 import requests
@@ -52,7 +53,7 @@ class Game(BaseModel):
             self.add_player(PlayerCreate(name=name))
         click.clear()
         click.confirm("Ready to play?", abort=True)
-        click.echo("\n")
+        click.clear()
 
     def add_card(self, card: Card) -> None:
         if card.type == CardType.CHANCE:
@@ -81,6 +82,16 @@ class Game(BaseModel):
     def jail_visit_player(self, player: Player) -> None:
         player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
 
+    def get_utility_rent(
+        self, space: GameSpaceGame, owner_id: int, roll_result: int
+    ) -> requests.Response:
+        response = requests.get(
+            "http://localhost:8000/gamespaces/utility-rent/{space.id}/owner/{owner_id}/roll/{roll_result}"
+        )
+        click.echo(f"get_utility_rent response: {response.json()}")
+
+        return response
+
     def handle_rent_payment(self, payer: Player, payee: Player, rent: int):
         if click.confirm(
             f"{payee.name}, Want to charge {payer.name} ${rent} rent?",
@@ -88,25 +99,28 @@ class Game(BaseModel):
         ):
             payer.pay(rent, PayType.RENT)
             payee.cash += rent
+        else:
+            return
 
     def move_player(self, player: Player, roll_result: int) -> None:
         # if player passes or lands on GO, add PASS_GO_AMOUNT to player's cash
         if player.position + roll_result >= len(self.spaces):
             player.cash += PASS_GO_AMOUNT
-            click.echo(f"passed go, added ${PASS_GO_AMOUNT}")
+            click.echo(f"Passed go, added ${PASS_GO_AMOUNT}")
         player.position = (player.position + roll_result) % len(self.spaces)
 
-    def post_move_action(self, new_space: GameSpaceGame, player: Player) -> None:
+    def post_move_action(  # noqa: C901
+        self, new_space: GameSpaceGame, player: Player, roll_result: int
+    ) -> None:
         if new_space.type == GameSpaceType.GO_TO_JAIL:
             click.echo("Going to jail...")
             self.jail_player(player)
-        # TODO: implement drawing of card
         if new_space.type in [GameSpaceType.DRAW_CHANCE, GameSpaceType.DRAW_CHEST]:
             if new_space.type == GameSpaceType.DRAW_CHANCE:
-                click.echo("Draw a chance card")
                 card = self.chance_cards.pop(0)
             else:
                 card = self.cc_cards.pop(0)
+            # if card is not a get out of jail card, return it to the end of the deck
             if not card.is_gooj:
                 self.add_card(card)
             player.handle_draw_card(card)
@@ -116,29 +130,44 @@ class Game(BaseModel):
             player.pay_income_tax()
         # TODO: if property is owned, determine the rent amount and pay it
         if (
-            new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
+            new_space.type in [GameSpaceType.PROPERTY]
             and new_space.status == PropertyStatus.OWNED
             and new_space.owner != player
         ):
-            rent = new_space.get_rent()
+            rent = new_space.get_property_rent()
             click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
             self.handle_rent_payment(player, new_space.owner, rent)
         if (
-            new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
+            new_space.type in [GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
+            and new_space.status == PropertyStatus.OWNED
+            and new_space.owner != player
+        ):
+            owner = requests.get(f"http://localhost:8000/player/name/{new_space.owner.name}").json()
+            click.echo(f"Owner: {owner}")
+            rent = self.get_utility_rent(
+                space=new_space, owner_id=owner["id"], roll_result=roll_result
+            )
+            rent = rent.json()
+            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
+            self.handle_rent_payment(player, new_space.owner, rent)
+        if (
+            new_space.type
+            in [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.VACANT
-        ) and click.confirm(f"Property is vacant. Purchase for ${new_space.value}?"):
+        ) and click.confirm(
+            f"{new_space.type.capitalize()} is vacant. Purchase for ${new_space.value}?"
+        ):
             if player.cash >= new_space.value:
                 new_space.owner = player
                 new_space.status = PropertyStatus.OWNED
                 player.cash -= new_space.value
-                click.echo(f"new space id: {new_space.id}")
                 requests.post(
                     f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
                 )
                 click.echo(f"{player.name} purchased {new_space.name} for ${new_space.value}.")
-
             else:
                 click.echo("Sorry, not enough cash.")
+        sleep(1)
 
     def play(self) -> None:
         self.no_cash_players = 0
@@ -155,9 +184,8 @@ class Game(BaseModel):
             click.echo("----------")
 
     def player_turn(self, player: Player):
-        click.echo(f"player: {player.name}'s turn")
-        starting_space = self.spaces[player.position]
-        click.echo(f"player: {player.name} started on {starting_space.name}")
+        click.echo(f"{player.name}'s turn:")
+        sleep(0.5)
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
         if roll_result == RollResultCode.THIRD_DOUBLE:
@@ -168,9 +196,9 @@ class Game(BaseModel):
             click.echo("Rolled a double while in jail, now just visiting.")
             self.jail_visit_player(player)
             return
-        click.echo(f"rolled: {roll_result}")
+        click.echo(f"Roll result: {roll_result}")
         self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
-        click.echo(f"player: {player.name} landed on {new_space.name}")
-        self.post_move_action(new_space, player)
+        click.echo(f"{player.name}'s resulting position: {new_space.name}\n")
+        self.post_move_action(new_space, player, roll_result)
         return
