@@ -5,7 +5,7 @@ from models.deed import Deed
 router = APIRouter()
 
 
-def get_deed(deed_id: int):
+def get_deed(deed_id):
     return db.session.query(Deed).filter(Deed.id == deed_id).first()
 
 

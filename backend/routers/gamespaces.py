@@ -1,7 +1,8 @@
+from constants import PropertyGroup
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
-from models.deed import Deed
 from models.gamespace import GameSpace
+from routers.deeds import get_deed
 from schemas.deed import PropertyDeed as PropertyDeedSchema
 from schemas.gamespace import GameSpace as GameSpaceSchema
 from schemas.gamespace import GameSpaceUpdate
@@ -9,17 +10,30 @@ from schemas.gamespace import GameSpaceUpdate
 router = APIRouter()
 
 
-def get_space(gamespace_id: int):
-    return db.session.query(GameSpace).filter(GameSpace.id == gamespace_id).first()
+def get_spaces():
+    return db.session.query(GameSpace).order_by(GameSpace.id).all()
 
 
-def get_deed(gamespace_id: int):
-    return db.session.query(Deed).filter(Deed.id == gamespace_id).first()
+def get_space(gamespace_id):
+    return (
+        db.session.query(GameSpace)
+        .filter(GameSpace.id == gamespace_id)
+        .order_by(GameSpace.id)
+        .first()
+    )
 
 
 @router.get("/gamespaces/")
 def get_gamespaces():
-    return db.session.query(GameSpace).all()
+    spaces = get_spaces()
+    for space in spaces:
+        space.deed = get_deed(space.id)
+    return spaces
+
+
+@router.get("/gamespaces/group/{group}")
+def get_gamespaces_by_group(group: PropertyGroup):
+    return db.session.query(GameSpace).filter(GameSpace.group == group).all()
 
 
 @router.get("/gamespace/{gampesace_id}", response_model=GameSpaceSchema)

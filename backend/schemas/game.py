@@ -50,7 +50,9 @@ class Game(BaseModel):
         for i in range(num_players):
             name = click.prompt("Enter player name", type=str)
             self.add_player(PlayerCreate(name=name))
-        print(self.players)
+        click.clear()
+        click.confirm("Ready to play?", abort=True)
+        click.echo("\n")
 
     def add_card(self, card: Card) -> None:
         if card.type == CardType.CHANCE:
@@ -119,7 +121,7 @@ class Game(BaseModel):
             and new_space.owner != player
         ):
             rent = new_space.get_rent()
-            click.echo(f"property is owned by {new_space.owner}. ${rent}.")
+            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
             self.handle_rent_payment(player, new_space.owner, rent)
         if (
             new_space.type in [GameSpaceType.PROPERTY, GameSpaceType.RAILROAD]
@@ -155,7 +157,7 @@ class Game(BaseModel):
     def player_turn(self, player: Player):
         click.echo(f"player: {player.name}'s turn")
         starting_space = self.spaces[player.position]
-        click.echo(f"player: {player.name} started on {starting_space}")
+        click.echo(f"player: {player.name} started on {starting_space.name}")
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
         if roll_result == RollResultCode.THIRD_DOUBLE:
@@ -169,6 +171,6 @@ class Game(BaseModel):
         click.echo(f"rolled: {roll_result}")
         self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
-        click.echo(f"player: {player.name} landed on {new_space}")
+        click.echo(f"player: {player.name} landed on {new_space.name}")
         self.post_move_action(new_space, player)
         return

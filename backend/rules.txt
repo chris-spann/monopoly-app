@@ -21,11 +21,19 @@ Types of Spaces
 There are two broad types of spaces in Monopoly – properties and action spaces.
 
 Properties
-There are 28 properties in the game, each of which has a title deed card associated with it, detailing rent, building cost and mortgage value. The properties are divided as follows:
+There are 28 properties in the game, each of which has a title deed card associated with it,
+detailing rent, building cost and mortgage value. The properties are divided as follows:
 
-Streets are the most numerous property – there are 22 streets in the game. Each street belongs to a colour set alongside one or two other streets. Starting from GO and proceeding clockwise, the colour sets are brown (purple in earlier editions), light blue, pink, orange, red, yellow, green and dark blue. Each street space has a coloured bar along the top indicating what colour set that street belongs to – this bar is also present on the title deed.
+Streets are the most numerous property – there are 22 streets in the game.
+Each street belongs to a colour set alongside one or two other streets.
+Starting from GO and proceeding clockwise, the colour sets are brown (purple in earlier editions),
+light blue, pink, orange, red, yellow, green and dark blue. Each street space has a coloured bar
+along the top indicating what colour set that street belongs to – this bar is also present on the title deed.
 There are four railroads (also known as stations) located at the centre of each side of the board.
-Finally, there are two utilities, the Electric Company and the Water Works. The Electric Company is in between St. Charles Place/Pall Mall and States Avenue/Whitehall, while the Water Works is in between Ventnor Avenue/Coventry Street and Marvin Gardens/Piccadilly.
+Finally, there are two utilities, the Electric Company and the Water Works.
+The Electric Company is in between St. Charles Place/Pall Mall and States Avenue/Whitehall,
+while the Water Works is in between Ventnor Avenue/Coventry Street and Marvin Gardens/Piccadilly.
+
 Action Spaces
 There are 12 action spaces, organised as follows:
 

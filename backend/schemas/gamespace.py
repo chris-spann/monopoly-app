@@ -23,7 +23,7 @@ class GameSpaceUpdate(GameSpaceBase):
 class GameSpace(GameSpaceBase):
     id: int | None
     owner_id: int | None
-    deed: PropertyDeed | None = None
+    deed: PropertyDeed | None
 
     def get_rent(self):
         if self.deed is None:

@@ -42,4 +42,8 @@ If you would like to contribute to the Monopoly app, follow these steps:
 
 ## License
 
+<<<<<<< Updated upstream
 The Monopoly app is licensed under the MIT License. See `LICENSE` for more information.
+=======
+The Monopoly app is licensed under the MIT License. See `LICENSE` for more information.
+>>>>>>> Stashed changes
