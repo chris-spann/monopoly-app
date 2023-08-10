@@ -20,6 +20,5 @@ start_monopoly_cli:
 	cd backend && poetry run python monopoly.py
 
 reset_db: backend
-	docker-compose down -v
-	docker-compose up -d --build
-
+	docker exec -it app alembic downgrade base
+	docker exec -it app alembic upgrade head
