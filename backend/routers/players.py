@@ -1,10 +1,12 @@
+from typing import Any
+
 from constants import GameSpaceType, PropertyStatus
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
 from models.player import Player
 from routers.gamespaces import get_space
 from schemas.player import Player as PlayerSchema
-from schemas.player import PlayerCreate, PlayerUpdate
+from schemas.player import PlayerCreate
 
 router = APIRouter()
 
@@ -48,12 +50,11 @@ def get_players():
 
 
 @router.patch("/player/{player_id}")
-def update_player(player_id, player: PlayerUpdate):
+def update_player(player_id, player_update: dict[str, Any]):
     db_entry = get_game_player(player_id)
     if not db_entry:
         raise HTTPException(status_code=404, detail="Player not found")
-    update_data = player.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
+    for key, value in player_update.items():
         setattr(db_entry, key, value)
     db.session.commit()
     db.session.refresh(db_entry)
