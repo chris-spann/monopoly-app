@@ -1,12 +1,14 @@
+import click
 from schemas.game import Game
 
 
 def setup_game() -> Game:
+    click.clear()
     print("One moment...")
     game = Game()
+    game.setup_players()
     game.get_gamespaces()
     game.get_cards()
-    game.setup_players()
     return game
 
 

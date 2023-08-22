@@ -22,3 +22,9 @@ start_monopoly_cli:
 reset_db: backend
 	docker exec -it app alembic downgrade base
 	docker exec -it app alembic upgrade head
+
+
+new_game:
+	make reset_db
+	make start_monopoly_cli
+	
