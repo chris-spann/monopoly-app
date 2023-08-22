@@ -54,12 +54,6 @@ class TestPlayer:
             mock_player.pay_income_tax()
             assert mock_player.cash == 1350
 
-    def test_go_to_jail(self, mock_player):
-        mock_player.go_to_jail(10)
-        assert mock_player.in_jail is True
-        assert mock_player.jail_count == 3
-        assert mock_player.position == 10
-
     def test_handle_draw_card_gooj(self, mock_gooj_card, mock_player):
         mock_player.handle_draw_card(mock_gooj_card)
         pass

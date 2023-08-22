@@ -27,4 +27,3 @@ reset_db: backend
 new_game:
 	make reset_db
 	make start_monopoly_cli
-	

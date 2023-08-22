@@ -44,6 +44,9 @@ class Player(PlayerBase):
                 return 0
         return roll_1 + roll_2
 
+    # TODO: Move pay to game module...
+    # function should take in payer/payee as argument,
+    # should be bank when purchasing property
     def pay(self, amount: int, reason: PayType) -> None:
         if amount >= self.cash:
             self.cash = 0
@@ -60,11 +63,6 @@ class Player(PlayerBase):
             self.pay(200, PayType.INCOME_TAX)
         else:
             self.pay(self.cash // 10, PayType.INCOME_TAX)
-
-    def go_to_jail(self, jail_index: int, jail_count=3, in_jail=True):
-        self.in_jail = in_jail
-        self.jail_count = jail_count
-        self.position = jail_index
 
     def handle_draw_card(self, card: Card):
         if card.is_gooj:

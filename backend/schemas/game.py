@@ -33,10 +33,11 @@ class Game(BaseModel):
         if space.type == GameSpaceType.JAIL:
             self.jail_index = len(self.spaces) - 1
 
-    def get_gamespaces(self):
-        response = requests.get("http://localhost:8000/gamespaces/").json()
-        for space in response:
-            self.add_space(GameSpaceGame(**space))
+    def add_card(self, card: Card) -> None:
+        if card.type == CardType.CHANCE:
+            self.chance_cards.append(card)
+        else:
+            self.cc_cards.append(card)
 
     def add_player(self, player: PlayerCreate) -> None:
         try:
@@ -55,32 +56,48 @@ class Game(BaseModel):
         click.confirm("Ready to play?", abort=True)
         click.clear()
 
-    def add_card(self, card: Card) -> None:
-        if card.type == CardType.CHANCE:
-            self.chance_cards.append(card)
-        else:
-            self.cc_cards.append(card)
-
-    def shuffle_cards(self):
-        random.shuffle(self.cc_cards)
-        random.shuffle(self.chance_cards)
-        click.echo("cards shuffled")
-        return self
+    def get_gamespaces(self):
+        response = requests.get("http://localhost:8000/gamespaces/").json()
+        for space in response:
+            self.add_space(GameSpaceGame(**space))
 
     def get_cards(self):
         response = requests.get("http://localhost:8000/cards/").json()
         for card in response:
             self.add_card(Card(**card))
-        self.shuffle_cards()
+        random.shuffle(self.cc_cards)
+        random.shuffle(self.chance_cards)
+        click.echo("Cards shuffled!")
+        return self
 
     def draw_card(self, card_type: CardType) -> Card:
         return self.chance_cards[0] if card_type == CardType.CHANCE else self.cc_cards[0]
 
-    def jail_player(self, player: Player) -> None:
-        player.go_to_jail(self.jail_index)
+    # def jail_player(self, player: Player, visit=False) -> None:
+    #     update = {"position": self.jail_index}
+    #     if visit:
+    #         player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
+    #     else:
+    #         player.go_to_jail(self.jail_index)
+    #     print(update)
 
-    def jail_visit_player(self, player: Player) -> None:
-        player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
+    def jail_player(self, player: Player, visit=False) -> None:
+        update = {"position": self.jail_index}
+        player.position = self.jail_index
+        if visit:
+            player.in_jail = False
+            player.jail_count = 0
+            update["in_jail"] = False
+            update["jail_count"] = 0
+            # player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
+        else:
+            player.in_jail = True
+            player.jail_count = 3
+            update["in_jail"] = True
+            update["jail_count"] = 3
+            # player.go_to_jail(self.jail_index)
+
+        requests.patch(f"http://localhost:8000/player/{player.id}", json=update)
 
     def get_utility_rent(
         self, space: GameSpaceGame, owner_id: int, roll_result: int
@@ -108,6 +125,12 @@ class Game(BaseModel):
             player.cash += PASS_GO_AMOUNT
             click.echo(f"Passed go, added ${PASS_GO_AMOUNT}")
         player.position = (player.position + roll_result) % len(self.spaces)
+        # update player position/cash in db
+        click.echo(f"Updating player_id: {player.id}")
+        requests.patch(
+            f"http://localhost:8000/player/{player.id}",
+            json={"position": player.position, "cash": player.cash},
+        )
 
     def post_move_action(  # noqa: C901
         self, new_space: GameSpaceGame, player: Player, roll_result: int
@@ -172,7 +195,10 @@ class Game(BaseModel):
     def play(self) -> None:
         self.no_cash_players = 0
         list_buff = itertools.cycle(self.players)
-        for player in list_buff:
+        for p in list_buff:
+            response = requests.get(f"http://localhost:8000/player/{p.id}").json()
+            player = Player(**response)
+            click.echo(f"player: {player}")
             if player.cash == 0:
                 self.no_cash_players += 1
                 click.echo(f"player: {player.name} is out of cash")
@@ -194,7 +220,7 @@ class Game(BaseModel):
             return
         if roll_result == RollResultCode.JAIL_DOUBLE:
             click.echo("Rolled a double while in jail, now just visiting.")
-            self.jail_visit_player(player)
+            self.jail_player(player, visit=True)
             return
         click.echo(f"Roll result: {roll_result}")
         self.move_player(player, roll_result)
