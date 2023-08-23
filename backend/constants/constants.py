@@ -21,6 +21,9 @@ class GameSpaceType(str, Enum):
     UTILITY = "utility"
 
 
+OWNABLE_SPACES = [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
+
+
 class PayType(str, Enum):
     INCOME_TAX = "income-tax"
     TAX = "tax"

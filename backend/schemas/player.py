@@ -1,6 +1,7 @@
 from random import randint
 
 import click
+import requests
 from constants import CardType, PayType, RollResultCode
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
@@ -29,23 +30,48 @@ class Player(PlayerBase):
         prop_repr = ", ".join(f"{prop.name}" for prop in self.properties)
         return f"Cash: ${self.cash}, Properties: [{prop_repr}]"
 
+    def roll_db_handler(self, is_double: bool, jail_count: int):
+        self.roll_1 = self.roll_2
+        self.roll_2 = self.roll_3
+        self.roll_3 = is_double
+
+        requests.patch(
+            f"http://localhost:8000/player/{self.id}",
+            json={
+                "roll_1": self.roll_1,
+                "roll_2": self.roll_2,
+                "roll_3": self.roll_3,
+                "jail_count": jail_count,
+            },
+        )
+
     def roll_die(self) -> tuple[int, int]:
         return randint(1, 6), randint(1, 6)
 
     def roll(self) -> int:
+        is_double = False
+        click.secho(message=f"roll history: {self.roll_1, self.roll_2, self.roll_3}")
+        click.secho(message=f"jail_count: {self.jail_count}")
         die_1, die_2 = self.roll_die()
+        click.secho(message=f"\n{self.name} rolled a {die_1} and a {die_2}!\n", fg="blue")
         self.prev_double.pop(0)
         if die_1 == die_2:
+            is_double = True
             self.prev_double.append(True)
             if self.in_jail:
+                self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.JAIL_DOUBLE
-            if all(self.prev_double):
+            # if all(self.prev_double):
+            if all([self.roll_1, self.roll_2, self.roll_3]):
+                self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.THIRD_DOUBLE
         else:
             self.prev_double.append(False)
             if self.in_jail and self.jail_count > 0:
                 self.jail_count -= 1
+                self.roll_db_handler(is_double, self.jail_count)
                 return 0
+        self.roll_db_handler(is_double, self.jail_count)
         return die_1 + die_2
 
     # TODO: Move pay to game module...
@@ -56,7 +82,8 @@ class Player(PlayerBase):
             self.cash = 0
         else:
             self.cash -= amount
-        click.echo(f"{self.name} paid ${amount} for {reason}")
+        click.echo(f"{self.name} paid ${amount} for {reason}\n")
+        requests.patch(f"http://localhost:8000/player/{self.id}", json={"cash": self.cash})
         return self.cash
 
     def pay_income_tax(self) -> None:
@@ -73,17 +100,17 @@ class Player(PlayerBase):
 
     def handle_draw_card(self, card: Card):
         if card.is_gooj:
-            click.echo("Drew a get out of jail free card!")
+            click.secho(message="Drew a get out of jail free card!", fg="bright_green")
             return
             # TODO: call update player endpoint
             # player.add_gooj_card(card)
 
         if card.type == CardType.CHANCE:
             click.echo("Drew a chance card!")
-            click.echo(card.title)
+            click.secho(message=card.title + "\n", fg="magenta")
         if card.type == CardType.COMMUNITY_CHEST:
             click.echo("Drew a community chest card!")
-            click.echo(card.title)
+            click.secho(message=card.title + "\n", fg="magenta")
 
 
 class PlayerCreate(PlayerBase):

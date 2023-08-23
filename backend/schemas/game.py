@@ -5,6 +5,7 @@ from time import sleep
 import click
 import requests
 from constants import (
+    OWNABLE_SPACES,
     PASS_GO_AMOUNT,
     CardType,
     GameSpaceType,
@@ -87,17 +88,16 @@ class Game(BaseModel):
             update["in_jail"] = True
             update["jail_count"] = 3
 
+        click.secho(message=f"jailupdate: {update}")
+
         requests.patch(f"http://localhost:8000/player/{player.id}", json=update)
 
     def get_utility_rent(
         self, space: GameSpaceGame, owner_id: int, roll_result: int
     ) -> requests.Response:
-        response = requests.get(
+        return requests.get(
             f"http://localhost:8000/gamespaces/utility-rent/{space.id}/owner/{owner_id}/roll/{roll_result}"
         )
-        click.echo(f"get_utility_rent response: {response.json()}")
-
-        return response
 
     def handle_rent_payment(self, payer: Player, payee: Player, rent: int):
         if click.confirm(
@@ -115,7 +115,7 @@ class Game(BaseModel):
         else:
             return
 
-    def move_player(self, player: Player, roll_result: int) -> None:
+    def move_player(self, player: Player, roll_result: int) -> Player:
         # if player passes or lands on GO, add PASS_GO_AMOUNT to player's cash
         if player.position + roll_result >= len(self.spaces):
             player.cash += PASS_GO_AMOUNT
@@ -126,10 +126,61 @@ class Game(BaseModel):
             f"http://localhost:8000/player/{player.id}",
             json={"position": player.position, "cash": player.cash},
         )
+        response = requests.get(f"http://localhost:8000/player/{player.id}").json()
+        return Player(**response)
 
-    def post_move_action(  # noqa: C901
-        self, new_space: GameSpaceGame, player: Player, roll_result: int
-    ) -> None:
+    def post_move_ownable(self, new_space: GameSpaceGame, player: Player, roll_result: int) -> None:
+        if (
+            new_space.type in [GameSpaceType.PROPERTY]
+            and new_space.status == PropertyStatus.OWNED
+            and new_space.owner.name != player.name
+        ):
+            rent = new_space.get_property_rent()
+            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
+            self.handle_rent_payment(player, new_space.owner, rent)
+        if (
+            new_space.type in [GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
+            and new_space.status == PropertyStatus.OWNED
+            and new_space.owner.name != player.name
+        ):
+            owner = requests.get(f"http://localhost:8000/player/name/{new_space.owner.name}").json()
+            click.echo(f"Owner: {owner.get('name')}")
+            rent = self.get_utility_rent(
+                space=new_space, owner_id=owner["id"], roll_result=roll_result
+            )
+            rent = rent.json()
+            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
+            self.handle_rent_payment(player, new_space.owner, rent)
+        if (
+            new_space.type
+            in [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
+            and new_space.status == PropertyStatus.VACANT
+        ):
+            if click.confirm(
+                click.style(
+                    text=f"{new_space.type.capitalize()} is vacant. "
+                    f"Purchase for ${new_space.value}?",
+                    fg="yellow",
+                )
+            ):
+                if player.cash >= new_space.value:
+                    new_space.owner = player
+                    new_space.status = PropertyStatus.OWNED
+                    # player.cash -= new_space.value
+                    requests.post(
+                        f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
+                    )
+                    click.echo(
+                        f"{player.name} purchased {new_space.name} for ${new_space.value}.\n"
+                    )
+                else:
+                    click.echo("Sorry, not enough cash.")
+            else:
+                click.echo("No purchase made.\n")
+
+    def post_move_action(self, new_space: GameSpaceGame, player: Player, roll_result: int) -> None:
+        if new_space.type in OWNABLE_SPACES:
+            self.post_move_ownable(new_space, player, roll_result)
         if new_space.type == GameSpaceType.GO_TO_JAIL:
             click.secho("Going to jail...", fg="red", bold=True)
             self.jail_player(player)
@@ -146,48 +197,6 @@ class Game(BaseModel):
             player.pay(new_space.value, PayType.TAX)
         if new_space.type == GameSpaceType.TAX_INCOME:
             player.pay_income_tax()
-        # TODO: if property is owned, determine the rent amount and pay it
-        if (
-            new_space.type in [GameSpaceType.PROPERTY]
-            and new_space.status == PropertyStatus.OWNED
-            and new_space.owner.name != player.name
-        ):
-            rent = new_space.get_property_rent()
-            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
-            self.handle_rent_payment(player, new_space.owner, rent)
-        if (
-            new_space.type in [GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
-            and new_space.status == PropertyStatus.OWNED
-            and new_space.owner.name != player.name
-        ):
-            owner = requests.get(f"http://localhost:8000/player/name/{new_space.owner.name}").json()
-            click.echo(f"Owner: {owner['name']}")
-            rent = self.get_utility_rent(
-                space=new_space, owner_id=owner["id"], roll_result=roll_result
-            )
-            rent = rent.json()
-            click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
-            self.handle_rent_payment(player, new_space.owner, rent)
-        if (
-            new_space.type
-            in [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
-            and new_space.status == PropertyStatus.VACANT
-        ) and click.confirm(
-            click.style(
-                text=f"{new_space.type.capitalize()} is vacant. Purchase for ${new_space.value}?",
-                fg="yellow",
-            )
-        ):
-            if player.cash >= new_space.value:
-                new_space.owner = player
-                new_space.status = PropertyStatus.OWNED
-                # player.cash -= new_space.value
-                requests.post(
-                    f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
-                )
-                click.echo(f"{player.name} purchased {new_space.name} for ${new_space.value}.")
-            else:
-                click.echo("Sorry, not enough cash.")
         sleep(1)
 
     def play(self) -> None:
@@ -207,7 +216,7 @@ class Game(BaseModel):
             click.echo("----------")
 
     def player_turn(self, player: Player):
-        click.echo(f"{player.name}'s turn:")
+        click.secho(message=f"{player.name}'s turn:", underline=True)
         click.secho(message=player, fg="green", bold=True)
         sleep(0.5)
         roll_result = player.roll()
@@ -223,8 +232,8 @@ class Game(BaseModel):
             self.jail_player(player, visit=True)
             return
         click.secho(message=f"Roll result: {roll_result}", fg="blue")
-        self.move_player(player, roll_result)
+        updated_player = self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
-        click.echo(f"{player.name}'s resulting position: {new_space.name}\n")
-        self.post_move_action(new_space, player, roll_result)
+        click.echo(f"{updated_player.name} landed on: {new_space.name}\n")
+        self.post_move_action(new_space, updated_player, roll_result)
         return
