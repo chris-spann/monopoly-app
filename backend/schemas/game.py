@@ -73,14 +73,6 @@ class Game(BaseModel):
     def draw_card(self, card_type: CardType) -> Card:
         return self.chance_cards[0] if card_type == CardType.CHANCE else self.cc_cards[0]
 
-    # def jail_player(self, player: Player, visit=False) -> None:
-    #     update = {"position": self.jail_index}
-    #     if visit:
-    #         player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
-    #     else:
-    #         player.go_to_jail(self.jail_index)
-    #     print(update)
-
     def jail_player(self, player: Player, visit=False) -> None:
         update = {"position": self.jail_index}
         player.position = self.jail_index
@@ -89,13 +81,11 @@ class Game(BaseModel):
             player.jail_count = 0
             update["in_jail"] = False
             update["jail_count"] = 0
-            # player.go_to_jail(jail_index=self.jail_index, jail_count=0, in_jail=False)
         else:
             player.in_jail = True
             player.jail_count = 3
             update["in_jail"] = True
             update["jail_count"] = 3
-            # player.go_to_jail(self.jail_index)
 
         requests.patch(f"http://localhost:8000/player/{player.id}", json=update)
 
@@ -103,7 +93,7 @@ class Game(BaseModel):
         self, space: GameSpaceGame, owner_id: int, roll_result: int
     ) -> requests.Response:
         response = requests.get(
-            "http://localhost:8000/gamespaces/utility-rent/{space.id}/owner/{owner_id}/roll/{roll_result}"
+            f"http://localhost:8000/gamespaces/utility-rent/{space.id}/owner/{owner_id}/roll/{roll_result}"
         )
         click.echo(f"get_utility_rent response: {response.json()}")
 
@@ -111,11 +101,17 @@ class Game(BaseModel):
 
     def handle_rent_payment(self, payer: Player, payee: Player, rent: int):
         if click.confirm(
-            f"{payee.name}, Want to charge {payer.name} ${rent} rent?",
+            click.style(
+                text=f"{payee.name}, Want to charge {payer.name} ${rent} rent?", fg="yellow"
+            ),
             abort=True,
         ):
-            payer.pay(rent, PayType.RENT)
-            payee.cash += rent
+            new_payer_bal = payer.pay(rent, PayType.RENT)
+            new_payee_cash = payee.cash + rent
+            requests.patch(f"http://localhost:8000/player/{payer.id}", json={"cash": new_payer_bal})
+            requests.patch(
+                f"http://localhost:8000/player/{payee.id}", json={"cash": new_payee_cash}
+            )
         else:
             return
 
@@ -123,10 +119,9 @@ class Game(BaseModel):
         # if player passes or lands on GO, add PASS_GO_AMOUNT to player's cash
         if player.position + roll_result >= len(self.spaces):
             player.cash += PASS_GO_AMOUNT
-            click.echo(f"Passed go, added ${PASS_GO_AMOUNT}")
+            click.secho(message=f"Passed go, added ${PASS_GO_AMOUNT}", fg="green", bold=True)
         player.position = (player.position + roll_result) % len(self.spaces)
         # update player position/cash in db
-        click.echo(f"Updating player_id: {player.id}")
         requests.patch(
             f"http://localhost:8000/player/{player.id}",
             json={"position": player.position, "cash": player.cash},
@@ -136,7 +131,7 @@ class Game(BaseModel):
         self, new_space: GameSpaceGame, player: Player, roll_result: int
     ) -> None:
         if new_space.type == GameSpaceType.GO_TO_JAIL:
-            click.echo("Going to jail...")
+            click.secho("Going to jail...", fg="red", bold=True)
             self.jail_player(player)
         if new_space.type in [GameSpaceType.DRAW_CHANCE, GameSpaceType.DRAW_CHEST]:
             if new_space.type == GameSpaceType.DRAW_CHANCE:
@@ -155,7 +150,7 @@ class Game(BaseModel):
         if (
             new_space.type in [GameSpaceType.PROPERTY]
             and new_space.status == PropertyStatus.OWNED
-            and new_space.owner != player
+            and new_space.owner.name != player.name
         ):
             rent = new_space.get_property_rent()
             click.echo(f"Rent is ${rent} for {new_space.name}, owned by {new_space.owner.name}.")
@@ -163,10 +158,10 @@ class Game(BaseModel):
         if (
             new_space.type in [GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.OWNED
-            and new_space.owner != player
+            and new_space.owner.name != player.name
         ):
             owner = requests.get(f"http://localhost:8000/player/name/{new_space.owner.name}").json()
-            click.echo(f"Owner: {owner}")
+            click.echo(f"Owner: {owner['name']}")
             rent = self.get_utility_rent(
                 space=new_space, owner_id=owner["id"], roll_result=roll_result
             )
@@ -178,12 +173,15 @@ class Game(BaseModel):
             in [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
             and new_space.status == PropertyStatus.VACANT
         ) and click.confirm(
-            f"{new_space.type.capitalize()} is vacant. Purchase for ${new_space.value}?"
+            click.style(
+                text=f"{new_space.type.capitalize()} is vacant. Purchase for ${new_space.value}?",
+                fg="yellow",
+            )
         ):
             if player.cash >= new_space.value:
                 new_space.owner = player
                 new_space.status = PropertyStatus.OWNED
-                player.cash -= new_space.value
+                # player.cash -= new_space.value
                 requests.post(
                     f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
                 )
@@ -198,12 +196,11 @@ class Game(BaseModel):
         for p in list_buff:
             response = requests.get(f"http://localhost:8000/player/{p.id}").json()
             player = Player(**response)
-            click.echo(f"player: {player}")
             if player.cash == 0:
                 self.no_cash_players += 1
-                click.echo(f"player: {player.name} is out of cash")
+                click.echo(f"Player: {player.name} is out of cash")
                 if self.no_cash_players == len(self.players):
-                    click.echo("game over, no players with cash")
+                    click.echo("Game over, no players remaining with cash")
                     break
                 continue
             self.player_turn(player)
@@ -211,18 +208,21 @@ class Game(BaseModel):
 
     def player_turn(self, player: Player):
         click.echo(f"{player.name}'s turn:")
+        click.secho(message=player, fg="green", bold=True)
         sleep(0.5)
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
         if roll_result == RollResultCode.THIRD_DOUBLE:
-            click.echo("3rd consecutive double, go to jail, fool!")
+            click.secho(message="3rd consecutive double, go to jail, fool!", fg="red", bold=True)
             self.jail_player(player)
             return
         if roll_result == RollResultCode.JAIL_DOUBLE:
-            click.echo("Rolled a double while in jail, now just visiting.")
+            click.secho(
+                message="Rolled a double while in jail, now just visiting.", fg="red", bold=True
+            )
             self.jail_player(player, visit=True)
             return
-        click.echo(f"Roll result: {roll_result}")
+        click.secho(message=f"Roll result: {roll_result}", fg="blue")
         self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
         click.echo(f"{player.name}'s resulting position: {new_space.name}\n")
