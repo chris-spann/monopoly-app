@@ -16,21 +16,27 @@ class TestPlayer:
     @mock.patch("schemas.player.Player.roll_die")
     def test_roll_third_double(self, mock_roll_die, mock_player):
         mock_roll_die.return_value = (2, 2)
-        mock_player.prev_double = [False, True, True]
+        mock_player.roll_1 = False
+        mock_player.roll_2 = True
+        mock_player.roll_3 = True
         result = mock_player.roll()
         assert result == RollResultCode.THIRD_DOUBLE
 
     @mock.patch("schemas.player.Player.roll_die")
     def test_roll_jail_double(self, mock_roll_die, mock_jailed_player):
         mock_roll_die.return_value = (2, 2)
-        mock_jailed_player.prev_double = [False, False, False]
+        mock_jailed_player.roll_1 = False
+        mock_jailed_player.roll_2 = False
+        mock_jailed_player.roll_3 = False
         result = mock_jailed_player.roll()
         assert result == RollResultCode.JAIL_DOUBLE
 
     @mock.patch("schemas.player.Player.roll_die")
     def test_roll_stay_in_jail(self, mock_roll_die, mock_jailed_player):
         mock_roll_die.return_value = (2, 1)
-        mock_jailed_player.prev_double = [False, False, False]
+        mock_jailed_player.roll_1 = False
+        mock_jailed_player.roll_2 = False
+        mock_jailed_player.roll_3 = False
         result = mock_jailed_player.roll()
         assert result == 0
         assert mock_jailed_player.in_jail is True

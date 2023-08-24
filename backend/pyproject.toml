@@ -35,7 +35,7 @@ build-backend = "poetry.core.masonry.api"
 addopts = "-ra -q -v --cov=. --cov-report term-missing"
 
 [tool.coverage.run]
-omit = ["*/tests/*"]
+omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.pyright]
 reportGeneralTypeIssues=false

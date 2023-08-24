@@ -24,7 +24,6 @@ class PlayerBase(BaseModel):
 
 class Player(PlayerBase):
     id: int | None
-    prev_double: list[bool] = [False, False, False]
 
     def __str__(self) -> str:
         prop_repr = ", ".join(f"{prop.name}" for prop in self.properties)
@@ -50,27 +49,27 @@ class Player(PlayerBase):
 
     def roll(self) -> int:
         is_double = False
-        click.secho(message=f"roll history: {self.roll_1, self.roll_2, self.roll_3}")
-        click.secho(message=f"jail_count: {self.jail_count}")
+        if any([self.roll_1, self.roll_2, self.roll_3]):
+            click.secho(message=f"Double Roll History: {self.roll_1, self.roll_2, self.roll_3}")
+        if self.jail_count > 0:
+            click.secho(message=f"Jail Turns Remaining: {self.jail_count}")
         die_1, die_2 = self.roll_die()
-        click.secho(message=f"\n{self.name} rolled a {die_1} and a {die_2}!\n", fg="blue")
-        self.prev_double.pop(0)
+        click.secho(message=f"\n{self.name} rolled a {die_1} and a {die_2}!", fg="blue")
+        # self.prev_double.pop(0)
         if die_1 == die_2:
             is_double = True
-            self.prev_double.append(True)
+            # self.prev_double.append(True)
             if self.in_jail:
                 self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.JAIL_DOUBLE
             # if all(self.prev_double):
-            if all([self.roll_1, self.roll_2, self.roll_3]):
+            if all([self.roll_2, self.roll_3, is_double]):
                 self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.THIRD_DOUBLE
-        else:
-            self.prev_double.append(False)
-            if self.in_jail and self.jail_count > 0:
-                self.jail_count -= 1
-                self.roll_db_handler(is_double, self.jail_count)
-                return 0
+        elif self.in_jail and self.jail_count > 0:
+            self.jail_count -= 1
+            self.roll_db_handler(is_double, self.jail_count)
+            return 0
         self.roll_db_handler(is_double, self.jail_count)
         return die_1 + die_2
 
@@ -82,7 +81,7 @@ class Player(PlayerBase):
             self.cash = 0
         else:
             self.cash -= amount
-        click.echo(f"{self.name} paid ${amount} for {reason}\n")
+        click.secho(message=f"{self.name} paid ${amount} for {reason.capitalize()}\n", fg="red")
         requests.patch(f"http://localhost:8000/player/{self.id}", json={"cash": self.cash})
         return self.cash
 
@@ -115,14 +114,3 @@ class Player(PlayerBase):
 
 class PlayerCreate(PlayerBase):
     name: str
-
-
-class PlayerUpdate(Player):
-    position: int | None
-    cash: int | None
-    in_jail: bool | None
-    jail_count: int | None
-    roll_1: bool | None
-    roll_2: bool | None
-    roll_3: bool | None
-    gooj_cards: list[Card] | None

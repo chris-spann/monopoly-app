@@ -6,7 +6,10 @@ router = APIRouter()
 
 
 def get_deed(deed_id):
-    return db.session.query(Deed).filter(Deed.id == deed_id).first()
+    deed = db.session.query(Deed).filter(Deed.id == deed_id).first()
+    if not deed:
+        deed = None
+    return deed
 
 
 @router.get("/deed/{deed_id}")

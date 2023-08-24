@@ -87,9 +87,6 @@ class Game(BaseModel):
             player.jail_count = 3
             update["in_jail"] = True
             update["jail_count"] = 3
-
-        click.secho(message=f"jailupdate: {update}")
-
         requests.patch(f"http://localhost:8000/player/{player.id}", json=update)
 
     def get_utility_rent(
@@ -116,12 +113,10 @@ class Game(BaseModel):
             return
 
     def move_player(self, player: Player, roll_result: int) -> Player:
-        # if player passes or lands on GO, add PASS_GO_AMOUNT to player's cash
         if player.position + roll_result >= len(self.spaces):
             player.cash += PASS_GO_AMOUNT
             click.secho(message=f"Passed go, added ${PASS_GO_AMOUNT}", fg="green", bold=True)
         player.position = (player.position + roll_result) % len(self.spaces)
-        # update player position/cash in db
         requests.patch(
             f"http://localhost:8000/player/{player.id}",
             json={"position": player.position, "cash": player.cash},
@@ -170,8 +165,10 @@ class Game(BaseModel):
                     requests.post(
                         f"http://localhost:8000/player/{player.id}/add-property/{new_space.id}"
                     )
-                    click.echo(
-                        f"{player.name} purchased {new_space.name} for ${new_space.value}.\n"
+                    click.secho(
+                        message=f"{player.name} purchased {new_space.name} "
+                        f"for ${new_space.value}.\n",
+                        fg="red",
                     )
                 else:
                     click.echo("Sorry, not enough cash.")
@@ -206,9 +203,8 @@ class Game(BaseModel):
             response = requests.get(f"http://localhost:8000/player/{p.id}").json()
             player = Player(**response)
             if player.cash == 0:
-                self.no_cash_players += 1
                 click.echo(f"Player: {player.name} is out of cash")
-                if self.no_cash_players == len(self.players):
+                if all(self.player.cash == 0 for self.player in self.players):
                     click.echo("Game over, no players remaining with cash")
                     break
                 continue
@@ -231,7 +227,7 @@ class Game(BaseModel):
             )
             self.jail_player(player, visit=True)
             return
-        click.secho(message=f"Roll result: {roll_result}", fg="blue")
+        click.secho(message=f"Roll result: {roll_result}\n", fg="blue")
         updated_player = self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
         click.echo(f"{updated_player.name} landed on: {new_space.name}\n")

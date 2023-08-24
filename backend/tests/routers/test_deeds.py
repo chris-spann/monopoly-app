@@ -23,12 +23,6 @@ class TestDeedsRouter:
         assert response.status_code == 200
         assert response.json() == {"message": "Hello World"}
 
-    # def test_deed_get(self, test_client):
-    #     response = test_client.get("/deed/3")
-    #     assert response.status_code == 200
-    #     assert response.json() == {"message": "Hello World"}
-
-    # unit tests for routers/deeds.py
     def test_get_deeds_2(self):
         res = requests.get("http://localhost:8000/deed/3")
         assert res.status_code == 200

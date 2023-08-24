@@ -27,7 +27,9 @@ def get_space(gamespace_id):
 def get_gamespaces():
     spaces = get_spaces()
     for space in spaces:
-        space.deed = get_deed(space.id)
+        deed = get_deed(space.id)
+        if deed:
+            space.deed = deed
     return spaces
 
 
