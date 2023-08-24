@@ -1,7 +1,5 @@
 from enum import Enum, IntEnum
 
-PASS_GO_AMOUNT = 200
-
 
 class CardType(str, Enum):
     COMMUNITY_CHEST = "community-chest"
@@ -19,9 +17,6 @@ class GameSpaceType(str, Enum):
     TAX = "tax"
     TAX_INCOME = "tax-income"
     UTILITY = "utility"
-
-
-OWNABLE_SPACES = [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
 
 
 class PayType(str, Enum):
@@ -57,3 +52,8 @@ class PropertyStatus(str, Enum):
 class RollResultCode(IntEnum):
     THIRD_DOUBLE = 98
     JAIL_DOUBLE = 99
+
+
+OWNABLE_SPACES = [GameSpaceType.PROPERTY, GameSpaceType.UTILITY, GameSpaceType.RAILROAD]
+
+PASS_GO_AMOUNT = 200

@@ -49,20 +49,20 @@ class Player(PlayerBase):
 
     def roll(self) -> int:
         is_double = False
-        if any([self.roll_1, self.roll_2, self.roll_3]):
-            click.secho(message=f"Double Roll History: {self.roll_1, self.roll_2, self.roll_3}")
+        if self.roll_3:
+            click.secho(
+                message=f"Consecutive Doubles: "
+                f"{[self.roll_1, self.roll_2, self.roll_3].count(True)}"
+            )
         if self.jail_count > 0:
             click.secho(message=f"Jail Turns Remaining: {self.jail_count}")
         die_1, die_2 = self.roll_die()
         click.secho(message=f"\n{self.name} rolled a {die_1} and a {die_2}!", fg="blue")
-        # self.prev_double.pop(0)
         if die_1 == die_2:
             is_double = True
-            # self.prev_double.append(True)
             if self.in_jail:
                 self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.JAIL_DOUBLE
-            # if all(self.prev_double):
             if all([self.roll_2, self.roll_3, is_double]):
                 self.roll_db_handler(is_double, self.jail_count)
                 return RollResultCode.THIRD_DOUBLE
@@ -73,9 +73,6 @@ class Player(PlayerBase):
         self.roll_db_handler(is_double, self.jail_count)
         return die_1 + die_2
 
-    # TODO: Move pay to game module...
-    # function should take in payer/payee as argument,
-    # should be bank when purchasing property
     def pay(self, amount: int, reason: PayType) -> int:
         if amount >= self.cash:
             self.cash = 0
