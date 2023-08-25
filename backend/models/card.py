@@ -10,3 +10,4 @@ class Card(Base):
     title: Mapped[str] = mapped_column(Text)
     type: Mapped[str] = mapped_column(String(50))
     is_gooj: Mapped[bool] = mapped_column(Boolean, default=False)
+    action_code: Mapped[str] = mapped_column(String(50))

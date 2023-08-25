@@ -25,17 +25,32 @@ def mock_jailed_player():
 
 @pytest.fixture()
 def mock_chance_card():
-    return Card(title="Advance to Go (Collect $200)", type=CardType.CHANCE, is_gooj=False)
+    return Card(
+        title="Advance to Go (Collect $200)",
+        type=CardType.CHANCE,
+        is_gooj=False,
+        action_code="MOCK",
+    )
 
 
 @pytest.fixture()
 def mock_cc_card():
-    return Card(title="Advance to Go (Collect $200)", type=CardType.COMMUNITY_CHEST, is_gooj=False)
+    return Card(
+        title="Advance to Go (Collect $200)",
+        type=CardType.COMMUNITY_CHEST,
+        is_gooj=False,
+        action_code="MOCK",
+    )
 
 
 @pytest.fixture()
 def mock_gooj_card():
-    return Card(title="Get Out of Jail Free", type=CardType.COMMUNITY_CHEST, is_gooj=True)
+    return Card(
+        title="Get Out of Jail Free",
+        type=CardType.COMMUNITY_CHEST,
+        is_gooj=True,
+        action_code="MOCK",
+    )
 
 
 @pytest.fixture()
@@ -80,4 +95,4 @@ def mock_gamespace():
 
 @pytest.fixture()
 def mock_card():
-    return Card(title="test", type="test")
+    return Card(title="test", type="test", action_code="MOCK", is_gooj=False)

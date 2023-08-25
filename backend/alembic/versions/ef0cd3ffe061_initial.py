@@ -5,9 +5,8 @@ Revises:
 Create Date: 2023-06-19 17:52:34.952628
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "ef0cd3ffe061"
@@ -38,6 +37,7 @@ def upgrade() -> None:
         sa.Column("title", sa.Text(), nullable=True),
         sa.Column("type", sa.String(length=50), nullable=True),
         sa.Column("is_gooj", sa.Boolean(), nullable=True),
+        sa.Column("action_code", sa.String(length=50), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_cards_id"), "cards", ["id"], unique=False)

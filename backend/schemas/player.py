@@ -2,7 +2,7 @@ from random import randint
 
 import click
 import requests
-from constants import CardType, PayType, RollResultCode
+from constants import PayType, RollResultCode
 from pydantic import BaseModel, ConfigDict
 from schemas.card import Card
 from schemas.gamespace import GameSpace
@@ -23,7 +23,7 @@ class PlayerBase(BaseModel):
 
 
 class Player(PlayerBase):
-    id: int | None
+    id: int
 
     def __str__(self) -> str:
         prop_repr = ", ".join(f"{prop.name}" for prop in self.properties)
@@ -100,13 +100,9 @@ class Player(PlayerBase):
             return
             # TODO: call update player endpoint
             # player.add_gooj_card(card)
-
-        if card.type == CardType.CHANCE:
-            click.echo("Drew a chance card!")
-            click.secho(message=card.title + "\n", fg="magenta")
-        if card.type == CardType.COMMUNITY_CHEST:
-            click.echo("Drew a community chest card!")
-            click.secho(message=card.title + "\n", fg="magenta")
+        click.secho(message="The card says:")
+        click.secho(message=card.title, fg="magenta")
+        card.action(self.id)
 
 
 class PlayerCreate(PlayerBase):
