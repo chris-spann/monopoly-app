@@ -26,8 +26,10 @@ class Player(PlayerBase):
     id: int
 
     def __str__(self) -> str:
-        prop_repr = ", ".join(f"{prop.name}" for prop in self.properties)
-        return f"Cash: ${self.cash}, Properties: [{prop_repr}]"
+        p_str = f"Cash: ${self.cash}"
+        if len(self.properties) > 0:
+            p_str += f", Properties: [{', '.join(f'{prop.name}' for prop in self.properties)}]"
+        return p_str
 
     def roll_db_handler(self, is_double: bool, jail_count: int):
         self.roll_1 = self.roll_2

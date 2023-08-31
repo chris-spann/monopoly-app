@@ -81,6 +81,28 @@ def add_property(player_id, property_id):
     raise HTTPException(status_code=400, detail="Error adding property to player")
 
 
+@router.post("/player/{player_id}/add-cash/{amount}")
+def add_cash(player_id: int, amount: int):
+    db_entry = get_game_player(player_id)
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="Player not found")
+    db_entry.cash += amount
+    db.session.commit()
+    db.session.refresh(db_entry)
+    return db_entry
+
+
+@router.post("/player/{player_id}/deduct-cash/{amount}")
+def deduct_cash(player_id: int, amount: int):
+    db_entry = get_game_player(player_id)
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="Player not found")
+    db_entry.cash -= amount
+    db.session.commit()
+    db.session.refresh(db_entry)
+    return db_entry
+
+
 @router.post("/players/")
 def create_player(name: str):
     db_entry = get_player_by_name(name)

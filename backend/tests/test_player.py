@@ -71,3 +71,7 @@ class TestPlayer:
     def test_handle_draw_cc(self, mock_cc_card, mock_player):
         mock_player.handle_draw_card(mock_cc_card)
         pass
+
+    def test_player_str(self, mock_gamespace_no_deed, mock_player):
+        mock_player.properties.append(mock_gamespace_no_deed)
+        assert mock_player.__str__() == "Cash: $1500, Properties: [test]"
