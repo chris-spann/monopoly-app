@@ -27,6 +27,7 @@ class Player(PlayerBase):
 
     def __str__(self) -> str:
         p_str = f"Cash: ${self.cash}"
+        self.properties.sort(key=lambda x: x.id if x.id is not None else 0)
         if len(self.properties) > 0:
             p_str += f", Properties: [{', '.join(f'{prop.name}' for prop in self.properties)}]"
         return p_str
