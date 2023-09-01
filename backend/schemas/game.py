@@ -68,7 +68,7 @@ class Game(BaseModel):
             self.add_card(Card(**card))
         random.shuffle(self.cc_cards)
         random.shuffle(self.chance_cards)
-        click.echo("Cards shuffled!")
+        click.secho(message="Cards shuffled!", fg="magenta")
         return self
 
     def draw_card(self, card_type: CardType) -> Card:
@@ -101,7 +101,6 @@ class Game(BaseModel):
             click.style(
                 text=f"{payee.name}, Want to charge {payer.name} ${rent} rent?", fg="yellow"
             ),
-            abort=True,
         ):
             new_payer_bal = payer.pay(rent, PayType.RENT)
             new_payee_cash = payee.cash + rent
@@ -110,6 +109,7 @@ class Game(BaseModel):
                 f"http://localhost:8000/player/{payee.id}", json={"cash": new_payee_cash}
             )
         else:
+            click.echo("No rent paid.\n")
             return
 
     def move_player(self, player: Player, roll_result: int) -> Player:
@@ -189,7 +189,7 @@ class Game(BaseModel):
             # if card is not a get out of jail card, return it to the end of the deck
             if not card.is_gooj:
                 self.add_card(card)
-            player.handle_draw_card(card)
+                player.handle_draw_card(card)
         if new_space.type == GameSpaceType.TAX:
             player.pay(new_space.value, PayType.TAX)
         if new_space.type == GameSpaceType.TAX_INCOME:
@@ -211,19 +211,16 @@ class Game(BaseModel):
             self.player_turn(player)
             click.echo("----------")
 
-    def player_turn(self, player: Player):
-        click.secho(message=f"{player.name}'s turn:", underline=True)
-        click.secho(message=player, fg="green", bold=True)
-        sleep(0.5)
+    def roll_sequence(self, player: Player) -> None:
         roll_result = player.roll()
         # roll result == 98 when 3 consecutive doubles, go to jail
         if roll_result == RollResultCode.THIRD_DOUBLE:
-            click.secho(message="3rd consecutive double, go to jail, fool!", fg="red", bold=True)
+            click.secho(message="3rd consecutive double, go to jail, fool!\n", fg="red", bold=True)
             self.jail_player(player)
             return
         if roll_result == RollResultCode.JAIL_DOUBLE:
             click.secho(
-                message="Rolled a double while in jail, now just visiting.", fg="red", bold=True
+                message="Rolled a double while in jail, now just visiting.\n", fg="red", bold=True
             )
             self.jail_player(player, visit=True)
             return
@@ -233,3 +230,33 @@ class Game(BaseModel):
         click.echo(f"{updated_player.name} landed on: {new_space.name}\n")
         self.post_move_action(new_space, updated_player, roll_result)
         return
+
+    def player_turn(self, player: Player):
+        click.secho(message=f"{player.name}'s turn:", underline=True)
+        click.secho(message=player, fg="green", bold=True)
+        sleep(0.5)
+        props_for_building = set()
+        for prop in player.properties:
+            # only properties can be built upon (not railroads or utilities)
+            if prop.type == GameSpaceType.PROPERTY:
+                prop_group = requests.get(
+                    f"http://localhost:8000/gamespaces/group/{prop.group}"
+                ).json()
+                owner_ids = [p["owner_id"] for p in prop_group]
+                if all(id == player.id for id in owner_ids):
+                    props_for_building.add(prop_group)
+        if len(props_for_building) > 0:
+            res = click.prompt(
+                text="What would you like to do?\nEnter [R] to roll, [B] to build something",
+                type=click.Choice(["R", "B"], case_sensitive=False),
+                show_choices=False,
+            )
+            roll = False
+            while roll is False:
+                if res == "R":
+                    self.roll_sequence(player)
+                if res == "B":
+                    roll = True
+                    click.echo(f"you can build on these properties: {props_for_building}\n")
+        else:
+            self.roll_sequence(player)

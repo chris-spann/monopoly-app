@@ -26,6 +26,9 @@ def adj_funds(action_code: str, player_id: int):
 # get list of players and loop thru them except provided player_id
 def adj_funds_batch(action_code: str, player_id):
     res = requests.get("http://localhost:8000/players/").json()
+    # TODO: fix this. if the code is ADD, then add amount * len(players-1)) to the player,
+    # and deduct amount from the others....and vice versa for PAY
+    # Currently, we're just ADDing to everyone except the player whose turn it is
     for player in res:
         if player["id"] != player_id:
             action_code = action_code.replace("X", "0")
