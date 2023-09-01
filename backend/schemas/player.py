@@ -29,7 +29,8 @@ class Player(PlayerBase):
         p_str = f"Cash: ${self.cash}"
         self.properties.sort(key=lambda x: x.id if x.id is not None else 0)
         if len(self.properties) > 0:
-            p_str += f", Properties: [{', '.join(f'{prop.name}' for prop in self.properties)}]"
+            p_str += ", Properties(group): "
+            p_str += f"[{', '.join(f'{prop.name}({prop.group})' for prop in self.properties)}]"
         return p_str
 
     def roll_db_handler(self, is_double: bool, jail_count: int):

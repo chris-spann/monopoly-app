@@ -26,7 +26,7 @@ stmt = (
     "(8, 'Vermont Ave', 100, 'property', 'light-blue', 'vacant'), "
     "(9, 'Connecticut Ave', 120, 'property', 'light-blue', 'vacant'), "
     "(10, 'Jail', 500, 'jail', Null, 'vacant'), "
-    "(11, 'St Charles Place', 140, 'property', Null, 'vacant'), "
+    "(11, 'St Charles Place', 140, 'property', 'purple', 'vacant'), "
     "(12, 'Electric Company', 150, 'utility', 'utility', 'vacant'), "
     "(13, 'States Ave', 140, 'property', 'purple', 'vacant'), "
     "(14, 'Virginia Ave', 160, 'property', 'purple', 'vacant'), "
