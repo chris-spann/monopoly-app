@@ -22,7 +22,7 @@ repos:
       - id: pytest
         name: Pytest and Coverage
         description: 100% unit testing coverage for Python code.
-        entry: cd backend && poetry run pytest -s -v backend/tests --capture=sys --cov=backend --cov-config=.coveragerc --cov-report term-missing
+        entry: make test
         language: system
         pass_filenames: false
         always_run: true
