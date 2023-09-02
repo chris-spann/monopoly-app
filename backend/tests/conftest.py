@@ -8,7 +8,7 @@ from schemas.gamespace import GameSpace
 from schemas.player import Player
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def test_client():
     return TestClient(app)
 
