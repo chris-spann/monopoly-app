@@ -1,19 +1,3 @@
-# This monolith Dockerfile:
-# Uses FastAPI to serve static assets
-# Uses gunicorn as a process manager to run the FastAPI app
-
-# FROM node:16 as frontend-build
-
-# WORKDIR /app
-
-# COPY frontend/package.json frontend/yarn.lock /app/
-
-# RUN yarn
-
-# COPY frontend /app/
-
-# RUN yarn build
-
 FROM python:3.10
 
 ENV PYTHONUNBUFFERED=1
@@ -32,8 +16,6 @@ RUN poetry install --no-root
 
 
 COPY . /app
-
-# COPY --from=frontend-build /app/build /app/static
 
 CMD gunicorn -k uvicorn.workers.UvicornWorker -b :8000 main:app
 
