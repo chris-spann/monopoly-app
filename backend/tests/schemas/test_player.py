@@ -9,12 +9,14 @@ class TestPlayer:
         assert 1 <= roll_1 <= 6
         assert 1 <= roll_2 <= 6
 
-    def test_roll(self, mock_player):
+    @mock.patch("requests.patch", return_value=None)
+    def test_roll(self, mock_patch, mock_player):
         roll = mock_player.roll()
         assert 2 <= roll <= 12
 
     @mock.patch("schemas.player.Player.roll_die")
-    def test_roll_third_double(self, mock_roll_die, mock_player):
+    @mock.patch("requests.patch", return_value=None)
+    def test_roll_third_double(self, mock_patch, mock_roll_die, mock_player):
         mock_roll_die.return_value = (2, 2)
         mock_player.roll_1 = False
         mock_player.roll_2 = True
@@ -23,7 +25,8 @@ class TestPlayer:
         assert result == RollResultCode.THIRD_DOUBLE
 
     @mock.patch("schemas.player.Player.roll_die")
-    def test_roll_jail_double(self, mock_roll_die, mock_jailed_player):
+    @mock.patch("requests.patch", return_value=None)
+    def test_roll_jail_double(self, mock_patch, mock_roll_die, mock_jailed_player):
         mock_roll_die.return_value = (2, 2)
         mock_jailed_player.roll_1 = False
         mock_jailed_player.roll_2 = False
@@ -32,7 +35,8 @@ class TestPlayer:
         assert result == RollResultCode.JAIL_DOUBLE
 
     @mock.patch("schemas.player.Player.roll_die")
-    def test_roll_stay_in_jail(self, mock_roll_die, mock_jailed_player):
+    @mock.patch("requests.patch", return_value=None)
+    def test_roll_stay_in_jail(self, mock_patch, mock_roll_die, mock_jailed_player):
         mock_roll_die.return_value = (2, 1)
         mock_jailed_player.roll_1 = False
         mock_jailed_player.roll_2 = False
@@ -43,20 +47,26 @@ class TestPlayer:
         assert mock_jailed_player.jail_count == 1
 
     def test_pay(self, mock_player):
-        mock_player.pay(100, PayType.RENT)
-        assert mock_player.cash == 1400
+        with mock.patch("requests.patch", return_value=None):
+            mock_player.pay(100, PayType.RENT)
+            assert mock_player.cash == 1400
 
     def test_pay_insufficient_funds(self, mock_player):
-        mock_player.pay(2000, PayType.RENT)
-        assert mock_player.cash == 0
+        with mock.patch("requests.patch", return_value=None):
+            mock_player.pay(2000, PayType.RENT)
+            assert mock_player.cash == 0
 
     def test_pay_income_tax_choice_1(self, mock_player):
-        with mock.patch("click.prompt", return_value=1):
+        with mock.patch("click.prompt", return_value=1), mock.patch(
+            "requests.patch", return_value=None
+        ):
             mock_player.pay_income_tax()
             assert mock_player.cash == 1300
 
     def test_pay_income_tax_choice_2(self, mock_player):
-        with mock.patch("click.prompt", return_value=2):
+        with mock.patch("click.prompt", return_value=2), mock.patch(
+            "requests.patch", return_value=None
+        ):
             mock_player.pay_income_tax()
             assert mock_player.cash == 1350
 
