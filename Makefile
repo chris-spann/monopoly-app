@@ -29,4 +29,4 @@ new_game:
 	make start_monopoly_cli
 
 test:
-	cd backend && poetry run pytest
+	docker-compose exec app pytest
