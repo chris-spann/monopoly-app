@@ -17,7 +17,6 @@ class GameSpaceBase(BaseModel):
 
 
 class GameSpaceUpdate(GameSpaceBase):
-    status: str
     owner_id: int | None
 
 
@@ -56,4 +55,3 @@ class GameSpace(GameSpaceBase):
 
 class GameSpaceGame(GameSpace):
     owner: Any = None
-    # deed: PropertyDeed | None = None

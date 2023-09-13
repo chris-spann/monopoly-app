@@ -67,6 +67,7 @@ actions = {
     "GO-JAIL": mock_action,
     "GO-RERD": mock_action,
     "GOOJF": mock_action,
+    "PAY-A50": adj_funds_batch,
     "PAY-015": adj_funds,
     "PAY-050": adj_funds,
     "PAY-100": adj_funds,

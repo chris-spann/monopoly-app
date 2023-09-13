@@ -213,7 +213,6 @@ class Game(BaseModel):
 
     def roll_sequence(self, player: Player) -> None:
         roll_result = player.roll()
-        # roll result == 98 when 3 consecutive doubles, go to jail
         if roll_result == RollResultCode.THIRD_DOUBLE:
             click.secho(message="3rd consecutive double, go to jail, fool!\n", fg="red", bold=True)
             self.jail_player(player)
@@ -242,7 +241,6 @@ class Game(BaseModel):
         sleep(0.5)
         props_for_building = set()
         for prop in player.properties:
-            # only properties can be built upon (not railroads or utilities)
             if prop.type == GameSpaceType.PROPERTY:
                 prop_group = requests.get(
                     f"http://localhost:8000/gamespaces/group/{prop.group.value}"
@@ -259,11 +257,9 @@ class Game(BaseModel):
                     show_choices=False,
                 )
                 if res == "R":
-                    # break out of this loop and roll
                     roll = True
                     self.roll_sequence(player)
                 if res == "B":
-                    roll = True
                     click.echo(
                         f"You may build on these properties: {[p[0] for p in props_for_building]}\n"
                     )

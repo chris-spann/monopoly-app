@@ -81,7 +81,7 @@ card_stmt = (
     "(16, 'You are assessed for street repairs. $40 per house, $115 per hotel', "
     "'community-chest', false, 'PAY-040-115'), "
     "(17, 'You have been elected chairman of the board. Pay each player $50', "
-    "'chance', false, 'PAY-A50'), "
+    "'chance', false, 'PAY-X50'), "
     "(18, 'Your building and loan matures. Collect $150', 'chance', false, 'ADD-150'), "
     "(19, 'Get out of jail free. This card may be kept until needed, or sold', "
     "'chance', true, 'GOOJF'), "
