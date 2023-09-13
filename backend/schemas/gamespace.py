@@ -1,5 +1,6 @@
 from typing import Any
 
+import requests
 from constants import GameSpaceType, PropertyGroup, PropertyStatus
 from pydantic import BaseModel, ConfigDict
 from schemas.deed import PropertyDeed
@@ -11,7 +12,7 @@ class GameSpaceBase(BaseModel):
     name: str
     value: int
     type: GameSpaceType
-    group: PropertyGroup | None
+    group: PropertyGroup
     status: PropertyStatus
 
 
@@ -33,6 +34,11 @@ class GameSpace(GameSpaceBase):
                 rent = 0
             case PropertyStatus.OWNED:
                 rent = self.deed.rent
+                prop_group = requests.get(
+                    f"http://localhost:8000/gamespaces/group/{self.group.value}"
+                ).json()
+                if all(p.get("owner_id") == self.owner_id for p in prop_group):
+                    rent = self.deed.rent_group
             case PropertyStatus.OWNED_1_HOUSE:
                 rent = self.deed.rent_1_house
             case PropertyStatus.OWNED_2_HOUSES:

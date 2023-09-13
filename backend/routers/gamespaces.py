@@ -35,6 +35,8 @@ def get_gamespaces():
 
 @router.get("/gamespaces/group/{group}")
 def get_gamespaces_by_group(group: PropertyGroup):
+    if group not in PropertyGroup:
+        raise HTTPException(status_code=404, detail="Property group not found")
     return db.session.query(GameSpace).filter(GameSpace.group == group).all()
 
 

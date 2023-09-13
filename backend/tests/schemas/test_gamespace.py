@@ -7,7 +7,7 @@ class TestGameSpace:
         ("gamespace", "status", "expected"),
         [
             ("mock_gamespace_no_deed", PropertyStatus.VACANT, 0),
-            ("mock_gamespace", PropertyStatus.OWNED, 10),
+            ("mock_owned_gamespace", PropertyStatus.OWNED, 10),
             ("mock_gamespace", PropertyStatus.VACANT, 0),
             ("mock_gamespace", PropertyStatus.OWNED_1_HOUSE, 20),
             ("mock_gamespace", PropertyStatus.OWNED_2_HOUSES, 30),

@@ -1,4 +1,4 @@
-from constants import GameSpaceType
+from constants import GameSpaceType, PropertyGroup
 from models.base import Base
 from models.deed import Deed
 from sqlalchemy import ForeignKey, Integer, String
@@ -12,7 +12,7 @@ class GameSpace(Base):
     name: Mapped[str] = mapped_column(String(50), index=True)
     value: Mapped[int] = mapped_column(Integer)
     type: Mapped["GameSpaceType"] = mapped_column(String(50))
-    group: Mapped[str] = mapped_column(String, nullable=True)
+    group: Mapped["PropertyGroup"] = mapped_column(String(50))
     status: Mapped[str] = mapped_column(String(50))
     owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("players.id"))
 

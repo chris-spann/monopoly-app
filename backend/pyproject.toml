@@ -17,6 +17,8 @@ alembic = "^1.11.1"
 httpx = "^0.24.1"
 sqlalchemy = "^2.0.17"
 requests = "^2.31.0"
+pytest-postgresql = "^5.0.0"
+pytest-asyncio = "^0.21.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -33,6 +35,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "-ra -q -v --cov=. --cov-report term-missing"
+asyncio_mode="auto"
 
 [tool.coverage.run]
 omit = ["*/tests/*", "*/__init__.py"]

@@ -18,6 +18,9 @@ class GameSpaceType(str, Enum):
     TAX_INCOME = "tax-income"
     UTILITY = "utility"
 
+    def __str__(self):
+        return self.value
+
 
 class PayType(str, Enum):
     INCOME_TAX = "income-tax"
@@ -36,6 +39,7 @@ class PropertyGroup(str, Enum):
     UTILITY = "utility"
     VIOLET = "violet"
     YELLOW = "yellow"
+    NONE = "none"
 
 
 class PropertyStatus(str, Enum):

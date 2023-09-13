@@ -227,7 +227,12 @@ class Game(BaseModel):
         click.secho(message=f"Roll result: {roll_result}\n", fg="blue")
         updated_player = self.move_player(player, roll_result)
         new_space = self.spaces[player.position]
-        click.echo(f"{updated_player.name} landed on: {new_space.name}\n")
+        new_space_str = f"{updated_player.name} landed on: {new_space.name}\n"
+        if new_space.type == GameSpaceType.PROPERTY:
+            new_space_str = (
+                f"{updated_player.name} landed on: {new_space.name} ({new_space.group.value})\n"
+            )
+        click.echo(new_space_str)
         self.post_move_action(new_space, updated_player, roll_result)
         return
 
@@ -240,23 +245,27 @@ class Game(BaseModel):
             # only properties can be built upon (not railroads or utilities)
             if prop.type == GameSpaceType.PROPERTY:
                 prop_group = requests.get(
-                    f"http://localhost:8000/gamespaces/group/{prop.group}"
+                    f"http://localhost:8000/gamespaces/group/{prop.group.value}"
                 ).json()
-                owner_ids = [p["owner_id"] for p in prop_group]
-                if all(id == player.id for id in owner_ids):
-                    props_for_building.add(prop_group)
+                if all(p.get("owner_id") == player.id for p in prop_group):
+                    for p in prop_group:
+                        props_for_building.add((p.get("name"), p.get("id")))
         if len(props_for_building) > 0:
-            res = click.prompt(
-                text="What would you like to do?\nEnter [R] to roll, [B] to build something",
-                type=click.Choice(["R", "B"], case_sensitive=False),
-                show_choices=False,
-            )
             roll = False
             while roll is False:
+                res = click.prompt(
+                    text="What would you like to do?\nEnter [R] to roll, [B] to build something",
+                    type=click.Choice(["R", "B"], case_sensitive=False),
+                    show_choices=False,
+                )
                 if res == "R":
+                    # break out of this loop and roll
+                    roll = True
                     self.roll_sequence(player)
                 if res == "B":
                     roll = True
-                    click.echo(f"you can build on these properties: {props_for_building}\n")
+                    click.echo(
+                        f"You may build on these properties: {[p[0] for p in props_for_building]}\n"
+                    )
         else:
             self.roll_sequence(player)

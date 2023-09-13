@@ -1,7 +1,8 @@
 import pytest
-from constants import CardType, GameSpaceType, PropertyStatus
+from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
 from fastapi.testclient import TestClient
 from main import app
+from pytest_postgresql import factories
 from schemas.card import Card
 from schemas.deed import PropertyDeed
 from schemas.gamespace import GameSpace
@@ -10,7 +11,8 @@ from schemas.player import Player
 
 @pytest.fixture(scope="module")
 def test_client():
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture()
@@ -61,7 +63,7 @@ def mock_gamespace_no_deed():
         name="test",
         value=200,
         type=GameSpaceType.PROPERTY,  # type: ignore
-        group=None,
+        group=PropertyGroup.BLUE,  # type: ignore
         status=PropertyStatus.VACANT,  # type: ignore
         deed=None,
     )
@@ -70,16 +72,42 @@ def mock_gamespace_no_deed():
 @pytest.fixture()
 def mock_gamespace():
     return GameSpace(
-        id=None,
+        id=4,
         owner_id=None,
         name="test",
         value=200,
         type=GameSpaceType.PROPERTY,  # type: ignore
-        group=None,
+        group=PropertyGroup.BLUE,  # type: ignore
         status=PropertyStatus.VACANT,  # type: ignore
         deed=PropertyDeed(
             id=1,
-            rent_group=1,
+            rent_group=12,
+            deed_type=GameSpaceType.PROPERTY,
+            rent=10,
+            rent_1_house=20,
+            rent_2_houses=30,
+            rent_3_houses=40,
+            rent_4_houses=50,
+            rent_hotel=60,
+            house_cost=50,
+            hotel_cost=50,
+        ),
+    )
+
+
+@pytest.fixture()
+def mock_owned_gamespace():
+    return GameSpace(
+        id=2,
+        owner_id=1,
+        name="test",
+        value=200,
+        type=GameSpaceType.PROPERTY,  # type: ignore
+        group=PropertyGroup.BLUE,  # type: ignore
+        status=PropertyStatus.VACANT,  # type: ignore
+        deed=PropertyDeed(
+            id=1,
+            rent_group=12,
             deed_type=GameSpaceType.PROPERTY,
             rent=10,
             rent_1_house=20,
@@ -96,3 +124,11 @@ def mock_gamespace():
 @pytest.fixture()
 def mock_card():
     return Card(title="test", type="test", action_code="MOCK", is_gooj=False)
+
+
+# Define a PostgreSQL test database fixture
+@pytest.fixture(scope="module")
+def mock_db():
+    a = factories.postgresql("monopoly_db")
+    a.init()
+    return a

@@ -84,4 +84,4 @@ class TestPlayer:
 
     def test_player_str(self, mock_gamespace_no_deed, mock_player):
         mock_player.properties.append(mock_gamespace_no_deed)
-        assert mock_player.__str__() == "Cash: $1500, Properties(group): [test(None)]"
+        assert mock_player.__str__() == "Cash: $1500, Properties(group): [test (blue)]"

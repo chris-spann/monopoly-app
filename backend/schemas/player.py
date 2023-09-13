@@ -27,25 +27,32 @@ class Player(PlayerBase):
 
     def __str__(self) -> str:
         p_str = f"Cash: ${self.cash}"
-        self.properties.sort(key=lambda x: x.id if x.id is not None else 0)
+        self.properties.sort(key=lambda x: x.group if x.group is not None else 0)
         if len(self.properties) > 0:
             p_str += ", Properties(group): "
-            p_str += f"[{', '.join(f'{prop.name}({prop.group})' for prop in self.properties)}]"
+            p_str += (
+                f"[{', '.join(f'{prop.name} ({prop.group.value})' for prop in self.properties)}]"
+            )
         return p_str
 
     def roll_db_handler(self, is_double: bool, jail_count: int):
         self.roll_1 = self.roll_2
         self.roll_2 = self.roll_3
         self.roll_3 = is_double
+        update = {
+            "roll_1": self.roll_1,
+            "roll_2": self.roll_2,
+            "roll_3": self.roll_3,
+            "jail_count": jail_count,
+        }
+
+        if jail_count == 0:
+            self.in_jail = False
+            update.update({"in_jail": self.in_jail})
 
         requests.patch(
             f"http://localhost:8000/player/{self.id}",
-            json={
-                "roll_1": self.roll_1,
-                "roll_2": self.roll_2,
-                "roll_3": self.roll_3,
-                "jail_count": jail_count,
-            },
+            json=update,
         )
 
     def roll_die(self) -> tuple[int, int]:
