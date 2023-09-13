@@ -29,4 +29,4 @@ new_game:
 	make start_monopoly_cli
 
 test:
-	docker-compose exec app pytest
+	docker-compose exec -T app pytest
