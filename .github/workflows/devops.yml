@@ -9,7 +9,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version-file: pyproject.toml
+        python-version-file: backend/pyproject.toml
     - name: Install dependencies
       run: |
         make install
