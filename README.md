@@ -1,3 +1,4 @@
+[![Python application test with Github actions](https://github.com/chris-spann/monopoly-app/actions/workflows/devops.yml/badge.svg)](https://github.com/chris-spann/monopoly-app/actions/workflows/devops.yml)
 # Monopoly CLI App
 
 
