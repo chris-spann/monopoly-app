@@ -1,0 +1,27 @@
+name: Python application test with Github actions
+
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version-file: pyproject.toml
+    - name: Install dependencies
+      run: |
+        make install
+    - name: Lint with Ruff
+      run: |
+        make lint
+    - name: Format with Black
+      run: |
+        make format
+    - name: Test with Pytest
+      run: |
+        make test
+    - name: Build Docker Contianer
+      run: |
+        make build
