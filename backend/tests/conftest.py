@@ -1,11 +1,8 @@
-import os
-
 import pytest
 from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
-from fastapi_sqlalchemy import DBSessionMiddleware
-from main import app
+from main import create_app
 from pytest_postgresql import factories
 from schemas.card import Card
 from schemas.deed import PropertyDeed
@@ -14,12 +11,10 @@ from schemas.player import Player
 
 load_dotenv(".env")
 
-DBSessionMiddleware(app=app, db_url=os.environ["DATABASE_URL"])
-
 
 @pytest.fixture(scope="module")
 def test_client():
-    with TestClient(app) as c:
+    with TestClient(create_app()) as c:
         yield c
 
 
