@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
 from dotenv import load_dotenv
@@ -12,6 +14,7 @@ from schemas.player import Player
 @pytest.fixture(scope="module")
 def test_client():
     load_dotenv(".env")
+    os.environ["DATABASE_URL"] = "postgresql+psycopg2://postgres:password@db:5432/monopoly_db"
     from main import create_app
 
     with TestClient(create_app()) as c:
