@@ -2,18 +2,18 @@ import pytest
 from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
 from dotenv import load_dotenv
 from fastapi.testclient import TestClient
-from main import create_app
 from pytest_postgresql import factories
 from schemas.card import Card
 from schemas.deed import PropertyDeed
 from schemas.gamespace import GameSpace
 from schemas.player import Player
 
-load_dotenv(".env")
-
 
 @pytest.fixture(scope="module")
 def test_client():
+    load_dotenv(".env")
+    from main import create_app
+
     with TestClient(create_app()) as c:
         yield c
 
