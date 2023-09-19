@@ -21,7 +21,6 @@ jobs:
         make format
     - name: Test with Pytest
       run: |
-        make start
         make test
     - name: Build Docker Contianer
       run: |
