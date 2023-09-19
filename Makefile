@@ -1,3 +1,23 @@
+# add descriptions for each command
+.PHONY:
+	backend build install format lint \
+	restart start start_monopoly_cli \
+	stop reset_db new_game test
+
+help:
+	@echo "Makefile commands:"
+	@echo "  build: build docker containers"
+	@echo "  install: install dependencies"
+	@echo "  format: format code"
+	@echo "  lint: lint code"
+	@echo "  new_game: start new game"
+	@echo "  reset_db: reset database"
+	@echo "  restart: restart docker containers"
+	@echo "  start: start docker containers"
+	@echo "  start_monopoly_cli: start monopoly cli"
+	@echo "  stop: stop docker containers"
+	@echo "  test: run tests"
+
 backend:
 	cd backend
 

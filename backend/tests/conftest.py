@@ -102,6 +102,11 @@ def mock_gamespace():
 
 
 @pytest.fixture()
+def mock_gamespaces():
+    return [mock_gamespace()]
+
+
+@pytest.fixture()
 def mock_owned_gamespace():
     return GameSpace(
         id=2,
