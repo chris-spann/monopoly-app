@@ -4,6 +4,13 @@
 
 This is a Monopoly app that allows you to play the classic board game on your computer. It is built with FastAPI and managed with Poetry, and can be run in a Docker-Compose container with a Postgres database. Alembic is used for database migrations and Pydantic is used for data validation.
 
+
+https://github.com/chris-spann/monopoly-app/assets/50681678/7a4733ee-f277-4ebf-b48b-9cafe0ab842f
+
+
+
+
+
 ## Installation
 
 To install the Monopoly app, follow these steps:
