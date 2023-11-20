@@ -61,7 +61,6 @@ test: backend
 
 test_cli: backend
 	make start
-	docker exec app alembic downgrade base
 	cd backend && poetry run pytest
 
 # deploy:
