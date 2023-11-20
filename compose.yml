@@ -1,12 +1,46 @@
+
+
 services:
   db:
-    container_name: postgresql_db
+    container_name: db
     env_file:
       - .env
     image: postgres
     restart: always
     ports:
       - 5432:5432
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - "postgres_host_auth_method=trust"
+    networks:
+      - mynet
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+
+  app:
+    container_name: app
+    env_file:
+      - .env
+    build: .
+    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db:db
+    restart: always
+    networks:
+      - mynet
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -25,16 +59,6 @@ services:
   #   depends_on:
   #     - db
 
-  app:
-    container_name: app
-    env_file:
-      - .env
-    build: .
-    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
-    volumes:
-      - .:/app
-    ports:
-      - 8000:8000
-    depends_on:
-      - db
-    restart: always
+networks:
+  mynet:
+    driver: bridge

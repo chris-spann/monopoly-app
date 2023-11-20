@@ -22,7 +22,7 @@ repos:
       - id: pytest
         name: Pytest and Coverage
         description: 100% unit testing coverage for Python code.
-        entry: make test
+        entry: make test_cli
         language: system
         pass_filenames: false
         always_run: true

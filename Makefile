@@ -55,7 +55,12 @@ new_game:
 	make reset_db
 	make start_monopoly_cli
 
-test:
+test: backend
+	docker exec -it app alembic downgrade base
+	cd backend && poetry run pytest
+
+test_cli: backend
+	docker exec app alembic downgrade base
 	cd backend && poetry run pytest
 
 # deploy:

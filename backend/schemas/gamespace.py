@@ -1,8 +1,9 @@
 from typing import Any
 
 import requests
-from constants import GameSpaceType, PropertyGroup, PropertyStatus
 from pydantic import BaseModel, ConfigDict
+
+from constants import GameSpaceType, PropertyGroup, PropertyStatus
 from schemas.deed import PropertyDeed
 
 
@@ -25,6 +26,24 @@ class GameSpace(GameSpaceBase):
     owner_id: int | None
     deed: PropertyDeed | None = None
 
+    @property
+    def is_property_group_owned(self):
+        return self.calc_is_property_group_owned()
+
+    @is_property_group_owned.setter
+    def is_property_group_owned(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("is_property_group_owned must be a bool")
+        self._is_property_group_owned = value
+
+    def calc_is_property_group_owned(self):
+        if self.deed is None:
+            return False
+        prop_group = requests.get(
+            f"http://localhost:8000/gamespaces/group/{self.group.value}"
+        ).json()
+        return all(p.get("owner_id") == self.owner_id for p in prop_group)
+
     def get_property_rent(self):
         if self.deed is None:
             return 0
@@ -33,10 +52,7 @@ class GameSpace(GameSpaceBase):
                 rent = 0
             case PropertyStatus.OWNED:
                 rent = self.deed.rent
-                prop_group = requests.get(
-                    f"http://localhost:8000/gamespaces/group/{self.group.value}"
-                ).json()
-                if all(p.get("owner_id") == self.owner_id for p in prop_group):
+                if self.is_property_group_owned:
                     rent = self.deed.rent_group
             case PropertyStatus.OWNED_1_HOUSE:
                 rent = self.deed.rent_1_house

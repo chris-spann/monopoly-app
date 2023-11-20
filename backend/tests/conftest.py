@@ -1,10 +1,17 @@
 import os
 
 import pytest
-from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
 from dotenv import load_dotenv
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi_sqlalchemy import DBSessionMiddleware
 from pytest_postgresql import factories
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from constants import CardType, GameSpaceType, PropertyGroup, PropertyStatus
+from models import Base
+from routers import api_router
 from schemas.card import Card
 from schemas.deed import PropertyDeed
 from schemas.gamespace import GameSpace
@@ -14,10 +21,11 @@ from schemas.player import Player
 @pytest.fixture(scope="module")
 def test_client():
     load_dotenv(".env")
-    os.environ["DATABASE_URL"] = "postgresql+psycopg2://postgres:password@db:5432/monopoly_db"
-    from main import create_app
-
-    with TestClient(create_app()) as c:
+    db_url = os.getenv("DATABASE_URL", "@db").replace("@db", "@localhost")
+    app = FastAPI()
+    app.include_router(api_router)
+    app.add_middleware(DBSessionMiddleware, db_url=db_url)
+    with TestClient(app) as c:
         yield c
 
 
@@ -102,20 +110,15 @@ def mock_gamespace():
 
 
 @pytest.fixture()
-def mock_gamespaces():
-    return [mock_gamespace()]
-
-
-@pytest.fixture()
-def mock_owned_gamespace():
+def mocker_gamespace():
     return GameSpace(
-        id=2,
         owner_id=1,
+        id=5,
         name="test",
         value=200,
-        type=GameSpaceType.PROPERTY,  # type: ignore
-        group=PropertyGroup.BLUE,  # type: ignore
-        status=PropertyStatus.VACANT,  # type: ignore
+        type=GameSpaceType.PROPERTY,
+        group=PropertyGroup.BLUE,
+        status=PropertyStatus.OWNED,
         deed=PropertyDeed(
             id=1,
             rent_group=12,
@@ -133,6 +136,65 @@ def mock_owned_gamespace():
 
 
 @pytest.fixture()
+def mock_gamespaces():
+    return [mock_gamespace()]
+
+
+@pytest.fixture()
+def mock_owned_gamespace():
+    return GameSpace(
+        id=2,
+        owner_id=1,
+        name="test",
+        value=200,
+        type=GameSpaceType.PROPERTY,  # type: ignore
+        group=PropertyGroup.BLUE,  # type: ignore
+        status=PropertyStatus.OWNED,  # type: ignore
+        deed=PropertyDeed(
+            id=1,
+            rent_group=12,
+            deed_type=GameSpaceType.PROPERTY,
+            rent=10,
+            rent_1_house=20,
+            rent_2_houses=30,
+            rent_3_houses=40,
+            rent_4_houses=50,
+            rent_hotel=60,
+            house_cost=50,
+            hotel_cost=50,
+        ),
+    )
+
+
+@pytest.fixture()
+def mock_owned_gamespace_group():
+    g = GameSpace(
+        id=2,
+        owner_id=1,
+        name="test",
+        value=200,
+        type=GameSpaceType.PROPERTY,  # type: ignore
+        group=PropertyGroup.BLUE,  # type: ignore
+        status=PropertyStatus.OWNED,  # type: ignore
+        deed=PropertyDeed(
+            id=1,
+            rent_group=12,
+            deed_type=GameSpaceType.PROPERTY,
+            rent=10,
+            rent_1_house=20,
+            rent_2_houses=30,
+            rent_3_houses=40,
+            rent_4_houses=50,
+            rent_hotel=60,
+            house_cost=50,
+            hotel_cost=50,
+        ),
+    )
+    g.is_property_group_owned = True
+    return g
+
+
+@pytest.fixture()
 def mock_card():
     return Card(title="test", type="test", action_code="MOCK", is_gooj=False)
 
@@ -143,3 +205,21 @@ def mock_db():
     a = factories.postgresql("monopoly_db")
     a.init()
     return a
+
+
+@pytest.fixture(scope="session")
+def test_engine():
+    engine = create_engine("postgresql+psycopg2://postgres:password@localhost:5432/monopoly_db")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture()
+def test_session(test_engine):
+    session = sessionmaker(bind=test_engine)
+    session = session()
+    yield session
+    session.rollback()
+    session.close()
