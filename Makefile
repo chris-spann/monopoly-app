@@ -61,7 +61,7 @@ test: backend
 
 test_cli: backend
 	make start
-	cd backend && poetry run pytest
+	cd backend && poetry run pytest tests/schemas/
 
 # deploy:
 # 	# deploy commands
