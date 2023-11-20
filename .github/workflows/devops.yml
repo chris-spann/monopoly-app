@@ -19,9 +19,9 @@ jobs:
     - name: Format with Black
       run: |
         make format
-    - name: Test with Pytest
-      run: |
-        make test
     - name: Build Docker Contianer
       run: |
         make build
+    - name: Test with Pytest
+      run: |
+        make test_cli
